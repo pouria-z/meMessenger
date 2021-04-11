@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "219416759250",
+    "project_id": "memessenger-c6ab0",
+    "storage_bucket": "memessenger-c6ab0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:219416759250:android:f7f5da10fbfe63d8c8960b",
+        "android_client_info": {
+          "package_name": "com.pouriazeinalzadeh.memessenger"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "219416759250-u2p6578l7onv6aptnn5mg8utg94ff374.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_iOMvjc__1-nLAoRkf4KSBwxoDKfHk_c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "219416759250-u2p6578l7onv6aptnn5mg8utg94ff374.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
