@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:memessenger/login_screen.dart';
@@ -5,6 +6,7 @@ import 'package:memessenger/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+Random random = Random();
 
 class RegisterScreen extends StatefulWidget {
 
@@ -22,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String email;
   String password;
   String confirmpassword;
+  final id = random.nextInt(1000000);
   bool isLoading = false;
 
 
@@ -129,11 +132,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       });
                       var newUser = await _auth.createUserWithEmailAndPassword(email: email, password: password);
                       newUser.user.sendEmailVerification();
-                      _firestore.collection("users").add(
+                      _firestore.collection("users").doc(email).set(
                         {
                           "username" : username,
                           "email" : email,
                           "password" : password,
+                          "id" : id,
                         },
                       );
                       showDialog(context: context, builder: (context) {

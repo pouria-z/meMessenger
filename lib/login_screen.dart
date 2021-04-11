@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:memessenger/chat_list.dart';
 import 'package:memessenger/welcome_screen.dart';
 import 'package:memessenger/chat_screen.dart';
 import 'package:memessenger/widgets.dart';
@@ -89,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       });
                       var newUser = await _auth.signInWithEmailAndPassword(email: email, password: password);
                       newUser.user.emailVerified ?
-                      Navigator.pushReplacementNamed(context, ChatScreen.route) : ScaffoldMessenger.of(context).showSnackBar(
+                      Navigator.pushReplacementNamed(context, ChatList.route) : ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Email has not been verified yet!"),
                         ),
                       );

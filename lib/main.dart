@@ -4,6 +4,8 @@ import 'package:memessenger/welcome_screen.dart';
 import 'package:memessenger/register_screen.dart';
 import 'package:memessenger/login_screen.dart';
 import 'package:memessenger/chat_screen.dart';
+import 'package:memessenger/chat_list.dart';
+import 'package:memessenger/search_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -68,12 +70,14 @@ class _meMessengerState extends State<meMessenger> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "meMessenger",
-      initialRoute: _auth.currentUser != null && _auth.currentUser.emailVerified ? ChatScreen.route : WelcomeScreen.route,
+      initialRoute: _auth.currentUser != null && _auth.currentUser.emailVerified ? ChatList.route : WelcomeScreen.route,
       routes: {
         WelcomeScreen.route: (context) => WelcomeScreen(),
         RegisterScreen.route: (context) => RegisterScreen(),
         LoginScreen.route: (context) => LoginScreen(),
         ChatScreen.route: (context) => ChatScreen(),
+        ChatList.route: (context) => ChatList(),
+        SearchScreen.route: (context) => SearchScreen(),
       },
       theme: ThemeData.light(),
       //darkTheme: ThemeData.dark(),

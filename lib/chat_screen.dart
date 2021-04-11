@@ -6,6 +6,7 @@ import 'package:memessenger/welcome_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:memessenger/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:memessenger/search_screen.dart';
 
 final _firestore = FirebaseFirestore.instance;
 final _auth = FirebaseAuth.instance;
@@ -44,80 +45,73 @@ class _ChatScreenState extends State<ChatScreen> {
     var min = now.minute.toString();
     var minuteplus0 = hour+":"+"0"+min;
     var time = min.length==2 ? hour+":"+min : minuteplus0;
-    var docname = now.toLocal();
-    _firestore.collection('messages').doc("$docname").set({
+    var chatdocname = now.toLocal();
+    _firestore.collection('chatRoom').doc("${SearchScreen.docName}").collection('messages').doc("$chatdocname").set({
       'text': messageText,
       'sender': _auth.currentUser.email,
       'time': time,
     },);
   }
 
-  Future<bool> onWillPop () {
-    SystemNavigator.pop();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: onWillPop,
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: Text("Chat"),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.logout),
-              onPressed: () {
-                _auth.signOut();
-                Navigator.pushNamed(context, WelcomeScreen.route);
-              },
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true,
+        title: Text("Chat"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () {
+              _auth.signOut();
+              Navigator.pushNamed(context, WelcomeScreen.route);
+            },
+          ),
+        ],
+      ),
+      body: SafeArea(
+        minimum: EdgeInsets.only(bottom: 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            MessageStream(),
           ],
         ),
-        body: SafeArea(
-          minimum: EdgeInsets.only(bottom: 40),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              MessageStream(),
-            ],
-          ),
-        ),
-        bottomSheet: Material(
-          color: Colors.white,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: TextField(
-                  textCapitalization: TextCapitalization.sentences,
-                  autocorrect: true,
-                  keyboardType: TextInputType.multiline,
-                  maxLines: null,
-                  onChanged: (value) {
-                    messageText = value;
-                  },
-                  controller: messageTextController,
-                  decoration: messageInputDecoration.copyWith(
-                    hintText: "Message",
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        Icons.send_rounded,
-                        color: Colors.blueAccent,
-                      ),
-                      onPressed: () {
-                        sendMessage();
-                      },
+      ),
+      bottomSheet: Material(
+        color: Colors.white,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: TextField(
+                textCapitalization: TextCapitalization.sentences,
+                autocorrect: true,
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
+                onChanged: (value) {
+                  messageText = value;
+                },
+                controller: messageTextController,
+                decoration: messageInputDecoration.copyWith(
+                  hintText: "Message",
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      Icons.send_rounded,
+                      color: Colors.blueAccent,
                     ),
-                    suffixIconConstraints: BoxConstraints()
+                    onPressed: () {
+                      sendMessage();
+                    },
                   ),
-                  cursorColor: Colors.blueAccent,
-                  cursorHeight: 18,
-                  cursorWidth: 1.5,
+                  suffixIconConstraints: BoxConstraints()
                 ),
+                cursorColor: Colors.blueAccent,
+                cursorHeight: 18,
+                cursorWidth: 1.5,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -130,7 +124,7 @@ class MessageStream extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('messages').snapshots(),
+      stream: _firestore.collection('chatRoom').doc("${SearchScreen.docName}").collection('messages').snapshots(),
       builder: (context, snapshot) {
         if(!snapshot.hasData){
           return Center(
