@@ -132,11 +132,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       });
                       var newUser = await _auth.createUserWithEmailAndPassword(email: email, password: password);
                       newUser.user.sendEmailVerification();
+                      newUser.user.updateProfile(displayName: username);
                       _firestore.collection("users").doc(email).set(
                         {
                           "username" : username,
                           "email" : email,
-                          "password" : password,
                           "id" : id,
                         },
                       );

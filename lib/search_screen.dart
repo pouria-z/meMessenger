@@ -10,14 +10,14 @@ final _firestore = FirebaseFirestore.instance;
 final _auth = FirebaseAuth.instance;
 String search;
 QuerySnapshot searchSnapshot;
-QuerySnapshot snapshot;
-final loggedInUser = _auth.currentUser.email;
+
+var currentUser = _auth.currentUser.email;
+var otherUserEmail = searchSnapshot.docs[0].get('email');
+var otherUserDisplayName = searchSnapshot.docs[0].get('username');
 
 class SearchScreen extends StatefulWidget {
 
-  static final currentUser = _auth.currentUser.email;
-  static final otherUser = searchSnapshot.docs[0].get('email');
-  static final docName = getChatRoomId(SearchScreen.currentUser, SearchScreen.otherUser);
+  static final docName = getChatRoomId(_auth.currentUser.email, otherUserEmail);
   static String route = "search_screen";
 
   @override
@@ -29,14 +29,14 @@ class _SearchScreenState extends State<SearchScreen> {
   bool isLoading = false;
 
 
-  void getusername(search) async {
+  void getusername(value) async {
     setState(() {
       isLoading = true;
     });
-    await _firestore.collection('users').where('username',isEqualTo: search).get()
-        .then((search) {
+    await _firestore.collection('users').where('username',isEqualTo: value).get()
+        .then((value) {
           setState(() {
-            searchSnapshot=search;
+            searchSnapshot=value;
           });
         },
     );
@@ -56,7 +56,6 @@ class _SearchScreenState extends State<SearchScreen> {
           userName: searchSnapshot.docs[index].get('username'),
         );
       },
-
     ) :
     Expanded(
       child: Hero(
@@ -69,6 +68,15 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  @override
+  void initState() {
+    ///don't cache the searchSnapshot
+    searchSnapshot=null;
+    ///print the loggedInUser
+    final loggedInUser = _auth.currentUser.email;
+    print(loggedInUser);
+    super.initState();
+  }
 
 
   @override
@@ -79,10 +87,13 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(
           children: [
             TextField(
+              autofocus: true,
               onSubmitted: getusername,
               onChanged: (value) {
                 search = value;
-                getusername(search);
+                setState(() {
+                  getusername(search);
+                });
               },
               textInputAction: TextInputAction.search,
               decoration: messageInputDecoration.copyWith(
@@ -95,7 +106,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
                 suffixIcon: Material(
                   color: Colors.transparent,
-                  child: Icon(Icons.search_rounded),
+                  child: Icon(Icons.search_rounded, color: Colors.black54,),
                 ),
               ),
               cursorColor: Colors.blueAccent,
@@ -171,21 +182,17 @@ class SearchTile extends StatelessWidget {
 
   void createChatRoom(context) {
 
-    if(SearchScreen.currentUser!=SearchScreen.otherUser) {
+    if(_auth.currentUser.email!=searchSnapshot.docs[0].get('email')) {
       try {
-        _firestore.collection('chatRoom').doc("${SearchScreen.docName}").set({
-          "chatroomId": SearchScreen.docName,
-          "users": {
-            "username": SearchScreen.currentUser,
-            "username2": SearchScreen.otherUser,
-          }
-        });
-        Navigator.pushNamed(context, ChatScreen.route);
+        List<String> users = [searchSnapshot.docs[0].get('email'), _auth.currentUser.email];
+        Map<String, dynamic> chatRoomMap = {'users': users, 'chatroomId' : SearchScreen.docName};
+        _firestore.collection('chatRoom').doc("${SearchScreen.docName}").set(chatRoomMap);
+        Navigator.pushReplacement(context, CupertinoPageRoute(builder: (context) => ChatScreen(SearchScreen.docName),));
       } catch (e) {
         print(e);
       }
     }
-    else if(SearchScreen.currentUser==SearchScreen.otherUser) {
+    else if(_auth.currentUser.email==searchSnapshot.docs[0].get('email')) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -197,6 +204,7 @@ class SearchTile extends StatelessWidget {
 
   }
 }
+
 getChatRoomId(String a, String b) {
   if(a.substring(0,1).codeUnitAt(0) > b.substring(0,1).codeUnitAt(0)){
     return "$b\_$a";

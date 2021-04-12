@@ -1,7 +1,9 @@
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:memessenger/chat_list.dart';
 import 'package:memessenger/welcome_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:memessenger/widgets.dart';
@@ -12,6 +14,9 @@ final _firestore = FirebaseFirestore.instance;
 final _auth = FirebaseAuth.instance;
 
 class ChatScreen extends StatefulWidget {
+
+  final String chatRoomId;
+  ChatScreen(this.chatRoomId);
 
   static String route = "chat_screen";
 
@@ -25,9 +30,14 @@ class _ChatScreenState extends State<ChatScreen> {
   UserCredential loggedInUser;
   final messageTextController = TextEditingController();
 
+  Stream<QuerySnapshot> chatStream;
+  String path;
+
   @override
   void initState() {
     getCurrentUser();
+    chatStream = _firestore.collection('chatRoom').doc("${widget.chatRoomId}").collection('messages').snapshots();
+    path = widget.chatRoomId;
     super.initState();
   }
 
@@ -46,35 +56,85 @@ class _ChatScreenState extends State<ChatScreen> {
     var minuteplus0 = hour+":"+"0"+min;
     var time = min.length==2 ? hour+":"+min : minuteplus0;
     var chatdocname = now.toLocal();
-    _firestore.collection('chatRoom').doc("${SearchScreen.docName}").collection('messages').doc("$chatdocname").set({
+    _firestore.collection('chatRoom').doc("${widget.chatRoomId}").collection('messages').doc("$chatdocname").set({
       'text': messageText,
-      'sender': _auth.currentUser.email,
+      'sender': _auth.currentUser.displayName,
       'time': time,
     },);
   }
 
+  Future<bool> onWillPop() {
+    Navigator.pop(context, ChatList.route);
+  }
+//path.toString().replaceAll("_", "").replaceAll(_auth.currentUser.email, ""),
+//               style: myTextStyleBold,
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: false,
         automaticallyImplyLeading: true,
-        title: Text("Chat"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () {
-              _auth.signOut();
-              Navigator.pushNamed(context, WelcomeScreen.route);
-            },
+        title: Hero(
+          tag: "text",
+          child: Material(
+            color: Colors.transparent,
+            child: AnimatedTextKit(
+              animatedTexts: [
+                TyperAnimatedText(path.toString().replaceAll("_", "").replaceAll(_auth.currentUser.email, ""),
+                  textStyle: myTextStyleBold,
+                  speed: Duration(milliseconds: 12),
+                ),
+              ],
+              totalRepeatCount: 1,
+            ),
           ),
-        ],
+        ),
+        leading: Hero(
+          tag: "floating",
+          child: Material(
+            color: Colors.transparent,
+            child: BackButton(
+              onPressed: onWillPop,
+              color: Colors.white,
+            ),
+          ),
+        ),
       ),
       body: SafeArea(
         minimum: EdgeInsets.only(bottom: 40),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            MessageStream(),
+            StreamBuilder<QuerySnapshot>(
+              stream: chatStream,
+              builder: (context, snapshot) {
+                if(!snapshot.hasData){
+                  return Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1,
+                    ),
+                  );
+                }
+                final messages = snapshot.data.docs.reversed;
+                List<Widget> messagesBubbles = [];
+                for (var message in messages){
+                  final messageText = message.get("text");
+                  final messageSender = message.get("sender");
+                  final messageTime = message.get("time");
+                  final messageBubble = messageSender==_auth.currentUser.displayName ?
+                  MessageBubble(sender: messageSender, text: messageText, time: messageTime,) :
+                  MessageBubbleReceiver(sender: messageSender, text: messageText, time: messageTime,);
+                  messagesBubbles.add(messageBubble);
+                }
+                return Expanded(
+                  child: ListView(
+                    reverse: true,
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                    children: messagesBubbles,
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -118,44 +178,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-
-
-class MessageStream extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('chatRoom').doc("${SearchScreen.docName}").collection('messages').snapshots(),
-      builder: (context, snapshot) {
-        if(!snapshot.hasData){
-          return Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 1,
-            ),
-          );
-        }
-        final messages = snapshot.data.docs.reversed;
-        List<Widget> messagesBubbles = [];
-        for (var message in messages){
-          final messageText = message.get("text");
-          final messageSender = message.get("sender");
-          final messageTime = message.get("time");
-          final messageBubble = messageSender==_auth.currentUser.email ?
-          MessageBubble(sender: messageSender, text: messageText, time: messageTime,) :
-          MessageBubbleReceiver(sender: messageSender, text: messageText, time: messageTime,);
-          messagesBubbles.add(messageBubble);
-        }
-        return Expanded(
-          child: ListView(
-            reverse: true,
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-            children: messagesBubbles,
-          ),
-        );
-      },
-    );
-  }
-}
-
 class MessageBubble extends StatelessWidget {
 
   final String text;
@@ -169,7 +191,7 @@ class MessageBubble extends StatelessWidget {
     return SafeArea(
       minimum: EdgeInsets.only(left: MediaQuery.of(context).size.width/4),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 2, vertical: 5),
+        padding: EdgeInsets.symmetric(horizontal: 2, vertical: 7),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -226,9 +248,9 @@ class MessageBubbleReceiver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      minimum: EdgeInsets.only(right: MediaQuery.of(context).size.width/4),
+      minimum: EdgeInsets.only(right: MediaQuery.of(context).size.width/4, bottom: 0),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 2, vertical: 5),
+        padding: EdgeInsets.symmetric(horizontal: 2, vertical: 7),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -90,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       });
                       var newUser = await _auth.signInWithEmailAndPassword(email: email, password: password);
                       newUser.user.emailVerified ?
-                      Navigator.pushReplacementNamed(context, ChatList.route) : ScaffoldMessenger.of(context).showSnackBar(
+                      Navigator.pushNamedAndRemoveUntil(context, ChatList.route, (route) => false) : ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Email has not been verified yet!"),
                         ),
                       );

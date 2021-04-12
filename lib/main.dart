@@ -8,6 +8,7 @@ import 'package:memessenger/chat_list.dart';
 import 'package:memessenger/search_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:memessenger/chat_list.dart';
 
 
 void main() async {
@@ -75,7 +76,7 @@ class _meMessengerState extends State<meMessenger> {
         WelcomeScreen.route: (context) => WelcomeScreen(),
         RegisterScreen.route: (context) => RegisterScreen(),
         LoginScreen.route: (context) => LoginScreen(),
-        ChatScreen.route: (context) => ChatScreen(),
+        //ChatScreen.route: (context) => ChatScreen(),
         ChatList.route: (context) => ChatList(),
         SearchScreen.route: (context) => SearchScreen(),
       },
