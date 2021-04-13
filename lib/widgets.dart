@@ -47,7 +47,7 @@ InputDecoration messageInputDecoration = InputDecoration(
   ),
   focusedBorder: OutlineInputBorder(
     borderSide: BorderSide(color: Colors.blueAccent),
-    borderRadius: BorderRadius.only(topRight: Radius.circular(20), topLeft: Radius.circular(20)),
+    borderRadius: BorderRadius.zero,
   ),
 
 );

@@ -80,7 +80,9 @@ class _meMessengerState extends State<meMessenger> {
         ChatList.route: (context) => ChatList(),
         SearchScreen.route: (context) => SearchScreen(),
       },
-      theme: ThemeData.light(),
+      theme: ThemeData.light().copyWith(
+        scaffoldBackgroundColor: Colors.grey[100]
+      ),
       //darkTheme: ThemeData.dark(),
     );
   }

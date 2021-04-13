@@ -17,6 +17,7 @@ final messageTextController = TextEditingController();
 class ChatScreen extends StatefulWidget {
 
   final String chatRoomId;
+  static String lastMessage;
   ChatScreen(this.chatRoomId);
 
   static String route = "chat_screen";
@@ -48,26 +49,36 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void sendMessage() {
-    messageTextController.clear();
-    final DateTime now = DateTime.now();
-    var hour = now.hour.toString();
-    var min = now.minute.toString();
-    var minuteplus0 = hour+":"+"0"+min;
-    var time = min.length==2 ? hour+":"+min : minuteplus0;
-    var chatdocname = now.toLocal();
-    _firestore.collection('chatRoom').doc("${widget.chatRoomId}").collection('messages').doc("$chatdocname").set({
-      'text': messageText,
-      'sender': _auth.currentUser.displayName,
-      'time': time,
-      'id' : "$chatdocname",
-    },);
+
+    if(messageTextController.text.isEmpty){
+      return null;
+    }
+    else {
+      messageTextController.clear();
+      final DateTime now = DateTime.now();
+      var hour = now.hour.toString();
+      var min = now.minute.toString();
+      var minuteplus0 = hour+":"+"0"+min;
+      var time = min.length==2 ? hour+":"+min : minuteplus0;
+      var chatdocname = now.toLocal();
+      _firestore.collection('chatRoom').doc("${widget.chatRoomId}").collection('messages').doc("$chatdocname").set({
+        'text': messageText,
+        'sender': _auth.currentUser.displayName,
+        'time': time,
+        'id' : "$chatdocname",
+      },);
+      _firestore.collection('chatRoom').doc("${widget.chatRoomId}").update({
+        'lastMessage': messageText,
+        'lastMessageSender': _auth.currentUser.displayName,
+        'lastMessageTime': time,
+      });
+    }
   }
 
   Future<bool> onWillPop() {
     Navigator.pop(context, ChatList.route);
   }
-//path.toString().replaceAll("_", "").replaceAll(_auth.currentUser.email, ""),
-//               style: myTextStyleBold,
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,14 +119,25 @@ class _ChatScreenState extends State<ChatScreen> {
             StreamBuilder<QuerySnapshot>(
               stream: chatStream,
               builder: (context, snapshot) {
-                if(!snapshot.hasData){
+                if(snapshot.connectionState==ConnectionState.waiting){
                   return Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 1,
                     ),
                   );
                 }
+                if(snapshot.data.docs.isEmpty){
+                  return Center(
+                    child: Text(
+                      "No Message Yet!",
+                      style: myTextStyle.copyWith(
+                          fontSize: 20,color: Colors.black38
+                      ),
+                    ),
+                  );
+                }
                 final messages = snapshot.data.docs.reversed;
+                ChatScreen.lastMessage = snapshot.data.docs.last.get('text');
                 List<Widget> messagesBubbles = [];
                 for (var message in messages){
                   final messageText = message.get("text");
@@ -190,17 +212,23 @@ class MessageBubble extends StatelessWidget {
   MessageBubble({Key key, this.text, this.sender, this.time, this.messageId, this.docName});
 
   void updateMessage(context) {
-    try{
-      _firestore.collection("chatRoom").doc(docName).collection("messages").doc(messageId).update(
-          {
-            "text" : text,
-          }
-      );
-      Navigator.pop(context);
-      messageTextController.clear();
+
+    if(text.isEmpty){
+      return null;
     }
-    catch(e) {
-      print(e);
+    else {
+      try{
+        _firestore.collection("chatRoom").doc(docName).collection("messages").doc(messageId).update(
+            {
+              "text" : text,
+            }
+        );
+        Navigator.pop(context);
+        messageTextController.clear();
+      }
+      catch(e) {
+        print(e);
+      }
     }
   }
 
@@ -228,6 +256,36 @@ class MessageBubble extends StatelessWidget {
                     child: Wrap(
                       children: [
                         ListTile(
+                          leading: Icon(Icons.edit_rounded),
+                          title: Text("Edit"),
+                          onTap: () {
+                            Navigator.pop(context);
+                            showModalBottomSheet(context: context,
+                              builder: (context) {
+                                return TextFormField(
+                                  autofocus: true,
+                                  onChanged: (value) {
+                                    text = value;
+                                  },
+                                  initialValue: text,
+                                  decoration: messageInputDecoration.copyWith(
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.zero
+                                    ),
+                                    hintText: "Edit Message",
+                                    suffixIcon: IconButton(
+                                      icon: Icon(Icons.check),
+                                      onPressed: () {
+                                        updateMessage(context);
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                        ListTile(
                           leading: Icon(Icons.delete_rounded),
                           title: Text("Delete"),
                           onTap: () {
@@ -243,7 +301,7 @@ class MessageBubble extends StatelessWidget {
                                     ),
                                   ),
                                   content: Text(
-                                    "Are you sure you want to delete this message for both users?",
+                                    "Are you sure you want to delete this message for both sides?",
                                     style: myTextStyle.copyWith(
                                       color: Colors.black54
                                     ),
@@ -274,40 +332,12 @@ class MessageBubble extends StatelessWidget {
                                       child: Text(
                                         "Delete",
                                         style: myTextStyleBold.copyWith(
-                                          color: Colors.red[700],
+                                          color: Colors.red,
                                           fontSize: 16,
                                         ),
                                       ),
                                     ),
                                   ],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                        ListTile(
-                          leading: Icon(Icons.edit_rounded),
-                          title: Text("Edit"),
-                          onTap: () {
-                            Navigator.pop(context);
-                            showModalBottomSheet(context: context,
-                              builder: (context) {
-                                return TextFormField(
-                                  autofocus: true,
-                                  textCapitalization: TextCapitalization.sentences,
-                                  onChanged: (value) {
-                                    text = value;
-                                  },
-                                  initialValue: text,
-                                  decoration: messageInputDecoration.copyWith(
-                                    hintText: "Edit Message",
-                                    suffixIcon: IconButton(
-                                      icon: Icon(Icons.check),
-                                      onPressed: () {
-                                        updateMessage(context);
-                                      },
-                                    ),
-                                  ),
                                 );
                               },
                             );

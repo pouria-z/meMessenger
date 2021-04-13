@@ -79,26 +79,41 @@ class ChatStreamer extends StatelessWidget {
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore.collection('chatRoom').where("users",arrayContains: _auth.currentUser.email).snapshots(),
       builder: (context, snapshot) {
-        if(!snapshot.hasData){
+        if(snapshot.connectionState==ConnectionState.waiting){
           return Center(
             child: CircularProgressIndicator(
               strokeWidth: 1,
             ),
           );
         }
-        final chats = snapshot.data.docs.reversed;
+        if(snapshot.data.docs.isEmpty){
+          return Center(
+            child: Text(
+              "No Chat Yet!",
+              style: myTextStyle.copyWith(
+                  fontSize: 24,color: Colors.black38
+              ),
+            ),
+          );
+        }
+        final chats = snapshot.data.docs;
         List<Widget> chatsTiles = [];
         for(var chat in chats){
-          final title = chat.data().entries.last.value.toString().replaceAll("_", "").replaceAll(_auth.currentUser.email, "");
-          final roomId = chat.data().entries.last.value.toString();
-          final thing = ChatTile(
+          final title = chat.get('chatroomId').toString().replaceAll("_", "").replaceAll(_auth.currentUser.email, "");
+          final roomId = chat.get('chatroomId');
+          final lastMessage = chat.get('lastMessage');
+          final lastMessageSender = chat.get('lastMessageSender');
+          final lastMessageTime = chat.get('lastMessageTime');
+          final chatTile = ChatTile(
             title: title,
             chatRoomId: roomId,
+            lastMessage: lastMessage,
+            lastMessageSender: lastMessageSender,
+            lastMessageTime: lastMessageTime,
           );
-          chatsTiles.add(thing);
+          chatsTiles.add(chatTile);
         }
         return ListView(
-          padding: EdgeInsets.symmetric(vertical: 10),
           children: chatsTiles,
         );
       },
@@ -110,13 +125,16 @@ class ChatTile extends StatelessWidget {
 
   final String title;
   final String chatRoomId;
+  final String lastMessage;
+  final String lastMessageSender;
+  final String lastMessageTime;
 
-  const ChatTile({Key key, this.title, this.chatRoomId}) : super(key: key);
+  const ChatTile({Key key, this.title, this.chatRoomId, this.lastMessage,
+    this.lastMessageSender, this.lastMessageTime}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ListTile(
           leading: CircleAvatar(
@@ -134,13 +152,43 @@ class ChatTile extends StatelessWidget {
             title,
             style: myTextStyleBold.copyWith(
               color: Colors.black,
+              fontSize: 15,
+            ),
+          ),
+          subtitle: lastMessageSender==_auth.currentUser.displayName ? Row(
+            children: [
+              Text(
+                "You: ",
+                style: myTextStyle.copyWith(
+                    color: Colors.black45,
+                    fontSize: 14
+                ),
+              ),
+              Text(
+                lastMessage.length > 30 ? lastMessage.substring(0,30) + "..." : lastMessage,
+                style: myTextStyle.copyWith(
+                    color: Colors.black45,
+                    fontSize: 14
+                ),
+              ),
+            ],
+          ) :
+          Text(
+              lastMessage.length > 35 ? lastMessage.substring(0,35) + "..." : lastMessage
+          ),
+          trailing: Text(
+            lastMessageTime,
+            style: myTextStyle.copyWith(
+              color: Colors.black45,
+              fontSize: 14,
             ),
           ),
           onTap: () {
+            print(chatRoomId);
             Navigator.push(context, CupertinoPageRoute(builder: (context) => ChatScreen(chatRoomId),));
           }
         ),
-        Divider(),
+        //Divider(),
       ],
     );
   }

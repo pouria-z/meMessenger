@@ -17,7 +17,7 @@ var otherUserDisplayName = searchSnapshot.docs[0].get('username');
 
 class SearchScreen extends StatefulWidget {
 
-  static final docName = getChatRoomId(_auth.currentUser.email, otherUserEmail);
+  static final docName = getChatRoomId(_auth.currentUser.email, searchSnapshot.docs[0].get('email'));
   static String route = "search_screen";
 
   @override
@@ -40,6 +40,7 @@ class _SearchScreenState extends State<SearchScreen> {
           });
         },
     );
+    //print(getChatRoomId(_auth.currentUser.email, otherUserEmail));
     setState(() {
       isLoading = false;
     });
@@ -87,7 +88,6 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(
           children: [
             TextField(
-              autofocus: true,
               onSubmitted: getusername,
               onChanged: (value) {
                 search = value;
@@ -185,9 +185,11 @@ class SearchTile extends StatelessWidget {
     if(_auth.currentUser.email!=searchSnapshot.docs[0].get('email')) {
       try {
         List<String> users = [searchSnapshot.docs[0].get('email'), _auth.currentUser.email];
-        Map<String, dynamic> chatRoomMap = {'users': users, 'chatroomId' : SearchScreen.docName};
-        _firestore.collection('chatRoom').doc("${SearchScreen.docName}").set(chatRoomMap);
-        Navigator.pushReplacement(context, CupertinoPageRoute(builder: (context) => ChatScreen(SearchScreen.docName),));
+        Map<String, dynamic> chatRoomMap = {'users': users, 'chatroomId' : SearchScreen.docName, 'lastMessage': "",
+          'lastMessageSender': "",
+          'lastMessageTime': "",};
+        _firestore.collection('chatRoom').doc("${getChatRoomId(_auth.currentUser.email, searchSnapshot.docs[0].get('email'))}").set(chatRoomMap);
+        Navigator.pushReplacement(context, CupertinoPageRoute(builder: (context) => ChatScreen(getChatRoomId(_auth.currentUser.email, searchSnapshot.docs[0].get('email'))),));
       } catch (e) {
         print(e);
       }
