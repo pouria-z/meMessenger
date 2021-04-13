@@ -4,7 +4,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:memessenger/chat_list.dart';
-import 'package:memessenger/welcome_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:memessenger/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,6 +11,8 @@ import 'package:memessenger/search_screen.dart';
 
 final _firestore = FirebaseFirestore.instance;
 final _auth = FirebaseAuth.instance;
+String messageText;
+final messageTextController = TextEditingController();
 
 class ChatScreen extends StatefulWidget {
 
@@ -26,9 +27,7 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
 
-  String messageText;
   UserCredential loggedInUser;
-  final messageTextController = TextEditingController();
 
   Stream<QuerySnapshot> chatStream;
   String path;
@@ -60,6 +59,7 @@ class _ChatScreenState extends State<ChatScreen> {
       'text': messageText,
       'sender': _auth.currentUser.displayName,
       'time': time,
+      'id' : "$chatdocname",
     },);
   }
 
@@ -121,8 +121,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   final messageText = message.get("text");
                   final messageSender = message.get("sender");
                   final messageTime = message.get("time");
+                  final messageId = message.get("id");
                   final messageBubble = messageSender==_auth.currentUser.displayName ?
-                  MessageBubble(sender: messageSender, text: messageText, time: messageTime,) :
+                  MessageBubble(sender: messageSender, text: messageText, time: messageTime, messageId: messageId, docName: path) :
                   MessageBubbleReceiver(sender: messageSender, text: messageText, time: messageTime,);
                   messagesBubbles.add(messageBubble);
                 }
@@ -180,11 +181,28 @@ class _ChatScreenState extends State<ChatScreen> {
 
 class MessageBubble extends StatelessWidget {
 
-  final String text;
+  String text;
   final String sender;
   final String time;
+  final String messageId;
+  final String docName;
 
-  const MessageBubble({Key key, this.text, this.sender, this.time}) : super(key: key);
+  MessageBubble({Key key, this.text, this.sender, this.time, this.messageId, this.docName});
+
+  void updateMessage(context) {
+    try{
+      _firestore.collection("chatRoom").doc(docName).collection("messages").doc(messageId).update(
+          {
+            "text" : text,
+          }
+      );
+      Navigator.pop(context);
+      messageTextController.clear();
+    }
+    catch(e) {
+      print(e);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -202,31 +220,131 @@ class MessageBubble extends StatelessWidget {
                 fontSize: 12,
               ),
             ),
-            Material(
-              borderRadius: BorderRadius.only(bottomRight: Radius.circular(20),
-                bottomLeft: Radius.circular(20), topLeft: Radius.circular(20),
-              ),
-              elevation: 5,
-              color: Colors.blue,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      text,
-                      style: myTextStyle.copyWith(
-                        fontSize: 15,
-                      ),
+            GestureDetector(
+              onLongPress: () {
+                showModalBottomSheet(context: context,
+                builder: (context) {
+                  return Container(
+                    child: Wrap(
+                      children: [
+                        ListTile(
+                          leading: Icon(Icons.delete_rounded),
+                          title: Text("Delete"),
+                          onTap: () {
+                            Navigator.pop(context);
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text(
+                                    "Delete Message",
+                                    style: myTextStyleBold.copyWith(
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  content: Text(
+                                    "Are you sure you want to delete this message for both users?",
+                                    style: myTextStyle.copyWith(
+                                      color: Colors.black54
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text(
+                                        "Cancel",
+                                        style: myTextStyleBold.copyWith(
+                                          color: Colors.black54,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        try{
+                                          _firestore.collection("chatRoom").doc(docName).collection("messages").doc(messageId).delete();
+                                        }
+                                        catch(e) {
+                                          print(e);
+                                        }
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text(
+                                        "Delete",
+                                        style: myTextStyleBold.copyWith(
+                                          color: Colors.red[700],
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                        ListTile(
+                          leading: Icon(Icons.edit_rounded),
+                          title: Text("Edit"),
+                          onTap: () {
+                            Navigator.pop(context);
+                            showModalBottomSheet(context: context,
+                              builder: (context) {
+                                return TextFormField(
+                                  autofocus: true,
+                                  textCapitalization: TextCapitalization.sentences,
+                                  onChanged: (value) {
+                                    text = value;
+                                  },
+                                  initialValue: text,
+                                  decoration: messageInputDecoration.copyWith(
+                                    hintText: "Edit Message",
+                                    suffixIcon: IconButton(
+                                      icon: Icon(Icons.check),
+                                      onPressed: () {
+                                        updateMessage(context);
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    Text(
-                      time,
-                      style: myTextStyle.copyWith(
-                        fontSize: 10,
-                        color: Colors.white54,
+                  );
+                 },
+                );
+              },
+              child: Material(
+                borderRadius: BorderRadius.only(bottomRight: Radius.circular(20),
+                  bottomLeft: Radius.circular(20), topLeft: Radius.circular(20),
+                ),
+                elevation: 5,
+                color: Colors.blue,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        text,
+                        style: myTextStyle.copyWith(
+                          fontSize: 15,
+                        ),
                       ),
-                    ),
-                  ],
+                      Text(
+                        time,
+                        style: myTextStyle.copyWith(
+                          fontSize: 10,
+                          color: Colors.white54,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
