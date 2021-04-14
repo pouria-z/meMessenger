@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:memessenger/chat_list.dart';
-import 'package:memessenger/welcome_screen.dart';
-import 'package:memessenger/chat_screen.dart';
 import 'package:memessenger/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 
 
 class LoginScreen extends StatefulWidget {
@@ -22,17 +19,21 @@ class _LoginScreenState extends State<LoginScreen> {
   String email;
   String password;
   bool isLoading = false;
-
-  @override
-  void initState() {
-    //_auth.currentUser.reload();
-    super.initState();
+  String validateEmail(String value) {
+    Pattern pattern =
+        r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+        r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+        r"{0,253}[a-zA-Z0-9])?)*$";
+    RegExp regex = new RegExp(pattern);
+    if (!regex.hasMatch(value) || value == null)
+      return 'Please Enter a Valid Email Address!';
+    else
+      return null;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       body: Padding(
         padding: EdgeInsets.all(20),
         child: Column(
@@ -50,18 +51,13 @@ class _LoginScreenState extends State<LoginScreen> {
               onChanged: (value) {
                 email = value;
               },
-              validator: (value) {
-                if(value.isEmpty || !value.contains("@") || !value.endsWith(".com")){
-                  return "Please Enter a Valid Email Address!";
-                }
-                return null;
-              },
+              validator: validateEmail,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               textAlign: TextAlign.center,
               keyboardType: TextInputType.emailAddress,
               decoration: myInputDecoration.copyWith(
-                hintText: "ENTER YOUR EMAIL ADDRESS",
-                labelText: "EMAIL",
+                hintText: "Enter Your Email Address",
+                labelText: "Email",
               ),
             ),
             SizedBox(height: MediaQuery.of(context).size.height/80,),
@@ -72,8 +68,8 @@ class _LoginScreenState extends State<LoginScreen> {
               textAlign: TextAlign.center,
               obscureText: true,
               decoration: myInputDecoration.copyWith(
-                hintText: "ENTER YOUR PASSWORD",
-                labelText: "PASSWORD",
+                hintText: "Enter Your Password",
+                labelText: "Password",
               ),
             ),
             SizedBox(height: MediaQuery.of(context).size.height/50,),

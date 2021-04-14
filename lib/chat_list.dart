@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:memessenger/chat_screen.dart';
 import 'package:memessenger/search_screen.dart';
 import 'package:memessenger/widgets.dart';
-import 'package:memessenger/search_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:memessenger/welcome_screen.dart';
 
@@ -21,12 +20,6 @@ class ChatList extends StatefulWidget {
 }
 
 class _ChatListState extends State<ChatList> {
-
-  @override
-  void initState() {
-    ChatStreamer();
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +70,9 @@ class ChatStreamer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('chatRoom').where("users", arrayContains: _auth.currentUser.email).snapshots(),
+      stream: _firestore.collection('chatRoom')
+          .where("users", arrayContains: _auth.currentUser.email)
+          .snapshots(),
       builder: (context, snapshot) {
         if(snapshot.connectionState==ConnectionState.waiting){
           return Center(
@@ -99,7 +94,8 @@ class ChatStreamer extends StatelessWidget {
         final chats = snapshot.data.docs;
         List<ChatTile> chatsTiles = [];
         for(var chat in chats){
-          final title = chat.get('chatroomId').toString().replaceAll("_", "").replaceAll(_auth.currentUser.email, "");
+          final title = chat.get('chatroomId').toString().replaceAll("_", "")
+              .replaceAll(_auth.currentUser.email, "");
           final roomId = chat.get('chatroomId');
           final lastMessage = chat.get('lastMessage');
           final lastMessageSender = chat.get('lastMessageSender');
@@ -114,22 +110,8 @@ class ChatStreamer extends StatelessWidget {
           chatsTiles.add(chatTile);
         }
         return ListView(
-
           children: chatsTiles,
         );
-        // return ListView.builder(
-        //   itemCount: snapshot.data.docs.length,
-        //
-        //   itemBuilder: (context, index) {
-        //     return ChatTile(
-        //       title: snapshot.data.docs[index].get('chatroomId').toString().replaceAll("_", "").replaceAll(_auth.currentUser.email, ""),
-        //       chatRoomId: snapshot.data.docs[index].get('chatroomId'),
-        //       lastMessage: snapshot.data.docs[index].get('lastMessage'),
-        //       lastMessageSender: snapshot.data.docs[index].get('lastMessageSender'),
-        //       lastMessageTime: snapshot.data.docs[index].get('lastMessageTime'),
-        //     );
-        //   },
-        // );
       },
     );
   }
@@ -175,20 +157,24 @@ class ChatTile extends StatelessWidget {
                 "You: ",
                 style: myTextStyle.copyWith(
                     color: Colors.black45,
-                    fontSize: 14
+                    fontSize: 14,
                 ),
               ),
               Text(
                 lastMessage.length > 30 ? lastMessage.substring(0,30) + "..." : lastMessage,
                 style: myTextStyle.copyWith(
                     color: Colors.black45,
-                    fontSize: 14
+                    fontSize: 14,
                 ),
               ),
             ],
           ) :
           Text(
-              lastMessage.length > 35 ? lastMessage.substring(0,35) + "..." : lastMessage
+            lastMessage.length > 35 ? lastMessage.substring(0,35) + "..." : lastMessage,
+            style: myTextStyle.copyWith(
+              color: Colors.black45,
+              fontSize: 14,
+            ),
           ),
           trailing: Text(
             lastMessageTime,
@@ -198,11 +184,11 @@ class ChatTile extends StatelessWidget {
             ),
           ),
           onTap: () {
-            print(chatRoomId);
-            Navigator.push(context, CupertinoPageRoute(builder: (context) => ChatScreen(chatRoomId),));
+            Navigator.push(context, CupertinoPageRoute(
+              builder: (context) => ChatScreen(chatRoomId),
+            ));
           }
         ),
-        //Divider(),
       ],
     );
   }
