@@ -77,7 +77,7 @@ class ChatStreamer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore.collection('chatRoom').where("users",arrayContains: _auth.currentUser.email).snapshots(),
+      stream: _firestore.collection('chatRoom').where("users", arrayContains: _auth.currentUser.email).snapshots(),
       builder: (context, snapshot) {
         if(snapshot.connectionState==ConnectionState.waiting){
           return Center(
@@ -97,7 +97,7 @@ class ChatStreamer extends StatelessWidget {
           );
         }
         final chats = snapshot.data.docs;
-        List<Widget> chatsTiles = [];
+        List<ChatTile> chatsTiles = [];
         for(var chat in chats){
           final title = chat.get('chatroomId').toString().replaceAll("_", "").replaceAll(_auth.currentUser.email, "");
           final roomId = chat.get('chatroomId');
@@ -114,8 +114,22 @@ class ChatStreamer extends StatelessWidget {
           chatsTiles.add(chatTile);
         }
         return ListView(
+
           children: chatsTiles,
         );
+        // return ListView.builder(
+        //   itemCount: snapshot.data.docs.length,
+        //
+        //   itemBuilder: (context, index) {
+        //     return ChatTile(
+        //       title: snapshot.data.docs[index].get('chatroomId').toString().replaceAll("_", "").replaceAll(_auth.currentUser.email, ""),
+        //       chatRoomId: snapshot.data.docs[index].get('chatroomId'),
+        //       lastMessage: snapshot.data.docs[index].get('lastMessage'),
+        //       lastMessageSender: snapshot.data.docs[index].get('lastMessageSender'),
+        //       lastMessageTime: snapshot.data.docs[index].get('lastMessageTime'),
+        //     );
+        //   },
+        // );
       },
     );
   }

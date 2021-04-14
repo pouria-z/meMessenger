@@ -7,20 +7,18 @@ import 'package:memessenger/chat_list.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:memessenger/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:memessenger/search_screen.dart';
+
 
 final _firestore = FirebaseFirestore.instance;
 final _auth = FirebaseAuth.instance;
-String messageText;
 final messageTextController = TextEditingController();
 
 class ChatScreen extends StatefulWidget {
 
-  final String chatRoomId;
-  static String lastMessage;
-  ChatScreen(this.chatRoomId);
-
   static String route = "chat_screen";
+
+  final String chatRoomId;
+  ChatScreen(this.chatRoomId);
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -28,28 +26,19 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
 
-  UserCredential loggedInUser;
-
+  String messageText;
   Stream<QuerySnapshot> chatStream;
-  String path;
+  String _path;
 
   @override
   void initState() {
-    getCurrentUser();
+    print(_auth.currentUser.email);
     chatStream = _firestore.collection('chatRoom').doc("${widget.chatRoomId}").collection('messages').snapshots();
-    path = widget.chatRoomId;
+    _path = widget.chatRoomId;
     super.initState();
   }
 
-  void getCurrentUser() {
-    final user = _auth.currentUser.email;
-    if (user != null){
-      print(user);
-    }
-  }
-
   void sendMessage() {
-
     if(messageTextController.text.isEmpty){
       return null;
     }
@@ -58,15 +47,20 @@ class _ChatScreenState extends State<ChatScreen> {
       final DateTime now = DateTime.now();
       var hour = now.hour.toString();
       var min = now.minute.toString();
-      var minuteplus0 = hour+":"+"0"+min;
-      var time = min.length==2 ? hour+":"+min : minuteplus0;
-      var chatdocname = now.toLocal();
-      _firestore.collection('chatRoom').doc("${widget.chatRoomId}").collection('messages').doc("$chatdocname").set({
+      var minutePlus0 = hour+":"+"0"+min;
+      var hourPlus0 = "0"+hour+":"+min;
+      var hourMinPlus0 = "0"+hour+":"+"0"+min;
+      var time = min.length==2 && hour.length==2 ? hour+":"+min
+          : min.length==2 && hour.length==1 ? hourPlus0
+          : min.length==1 && hour.length==2 ? minutePlus0
+          : hourMinPlus0;
+      var chatDocName = now.toLocal();
+      _firestore.collection('chatRoom').doc("${widget.chatRoomId}").collection('messages').doc("$chatDocName").set({
         'text': messageText,
         'sender': _auth.currentUser.displayName,
         'time': time,
-        'id' : "$chatdocname",
-      },);
+        'id' : "$chatDocName",
+      });
       _firestore.collection('chatRoom').doc("${widget.chatRoomId}").update({
         'lastMessage': messageText,
         'lastMessageSender': _auth.currentUser.displayName,
@@ -75,6 +69,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // ignore: missing_return
   Future<bool> onWillPop() {
     Navigator.pop(context, ChatList.route);
   }
@@ -83,15 +78,14 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: false,
-        automaticallyImplyLeading: true,
         title: Hero(
           tag: "text",
           child: Material(
             color: Colors.transparent,
             child: AnimatedTextKit(
               animatedTexts: [
-                TyperAnimatedText(path.toString().replaceAll("_", "").replaceAll(_auth.currentUser.email, ""),
+                TyperAnimatedText(_path.toString().replaceAll("_", "")
+                    .replaceAll(_auth.currentUser.email, ""),
                   textStyle: myTextStyleBold,
                   speed: Duration(milliseconds: 12),
                 ),
@@ -112,91 +106,104 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
       body: SafeArea(
-        minimum: EdgeInsets.only(bottom: 40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            StreamBuilder<QuerySnapshot>(
-              stream: chatStream,
-              builder: (context, snapshot) {
-                if(snapshot.connectionState==ConnectionState.waiting){
-                  return Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 1,
-                    ),
-                  );
-                }
-                if(snapshot.data.docs.isEmpty){
-                  return Center(
-                    child: Text(
-                      "No Message Yet!",
-                      style: myTextStyle.copyWith(
-                          fontSize: 20,color: Colors.black38
-                      ),
-                    ),
-                  );
-                }
-                final messages = snapshot.data.docs.reversed;
-                ChatScreen.lastMessage = snapshot.data.docs.last.get('text');
-                List<Widget> messagesBubbles = [];
-                for (var message in messages){
-                  final messageText = message.get("text");
-                  final messageSender = message.get("sender");
-                  final messageTime = message.get("time");
-                  final messageId = message.get("id");
-                  final messageBubble = messageSender==_auth.currentUser.displayName ?
-                  MessageBubble(sender: messageSender, text: messageText, time: messageTime, messageId: messageId, docName: path) :
-                  MessageBubbleReceiver(sender: messageSender, text: messageText, time: messageTime,);
-                  messagesBubbles.add(messageBubble);
-                }
-                return Expanded(
-                  child: ListView(
-                    reverse: true,
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                    children: messagesBubbles,
-                  ),
-                );
-              },
-            ),
-          ],
+        minimum: EdgeInsets.only(bottom: MediaQuery.of(context).size.height/20),
+        child: ChatStream(
+          chatStream: chatStream,
+          path: _path,
         ),
       ),
       bottomSheet: Material(
         color: Colors.white,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: TextField(
-                textCapitalization: TextCapitalization.sentences,
-                autocorrect: true,
-                keyboardType: TextInputType.multiline,
-                maxLines: null,
-                onChanged: (value) {
-                  messageText = value;
-                },
-                controller: messageTextController,
-                decoration: messageInputDecoration.copyWith(
-                  hintText: "Message",
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      Icons.send_rounded,
-                      color: Colors.blueAccent,
-                    ),
-                    onPressed: () {
-                      sendMessage();
-                    },
-                  ),
-                  suffixIconConstraints: BoxConstraints()
-                ),
-                cursorColor: Colors.blueAccent,
-                cursorHeight: 18,
-                cursorWidth: 1.5,
+        child: TextField(
+          autocorrect: true,
+          maxLines: null,
+          textCapitalization: TextCapitalization.sentences,
+          keyboardType: TextInputType.multiline,
+          onChanged: (value) {
+            messageText = value;
+          },
+          controller: messageTextController,
+          decoration: messageInputDecoration.copyWith(
+            hintText: "Message",
+            suffixIcon: IconButton(
+              icon: Icon(
+                Icons.send_rounded,
+                color: Colors.blueAccent,
               ),
+              onPressed: () {
+                sendMessage();
+              },
             ),
-          ],
+          ),
+          cursorColor: Colors.blueAccent,
+          cursorHeight: 18,
+          cursorWidth: 1.5,
         ),
       ),
+    );
+  }
+}
+
+class ChatStream extends StatelessWidget {
+  const ChatStream({
+    Key key,
+    @required this.chatStream,
+    @required String path,
+  }) : _path = path, super(key: key);
+
+  final Stream<QuerySnapshot> chatStream;
+  final String _path;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: chatStream,
+      builder: (context, snapshot) {
+        if(snapshot.connectionState==ConnectionState.waiting){
+          return Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 1,
+            ),
+          );
+        }
+        if(snapshot.data.docs.isEmpty){
+          return Center(
+            child: Text(
+              "No Message Yet!",
+              style: myTextStyle.copyWith(
+                fontSize: 20,color: Colors.black38
+              ),
+            ),
+          );
+        }
+        final messages = snapshot.data.docs.reversed;
+        List<Widget> messagesBubbles = [];
+        for (var message in messages){
+          final messageText = message.get("text");
+          final messageSender = message.get("sender");
+          final messageTime = message.get("time");
+          final messageId = message.get("id");
+          final messageBubble = messageSender==_auth.currentUser.displayName ?
+          MessageBubble(
+            sender: messageSender,
+            text: messageText,
+            time: messageTime,
+            messageId: messageId,
+            docName: _path,
+          ) :
+          MessageBubbleReceiver(
+            sender: messageSender,
+            text: messageText,
+            time: messageTime,
+          );
+          messagesBubbles.add(messageBubble);
+        }
+        return ListView(
+          reverse: true,
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+          children: messagesBubbles,
+        );
+      },
     );
   }
 }
@@ -209,10 +216,9 @@ class MessageBubble extends StatelessWidget {
   final String messageId;
   final String docName;
 
-  MessageBubble({Key key, this.text, this.sender, this.time, this.messageId, this.docName});
+  MessageBubble({Key key, this.text, this.sender, this.time, this.messageId, this.docName}) : super(key: key);
 
   void updateMessage(context) {
-
     if(text.isEmpty){
       return null;
     }
@@ -230,6 +236,18 @@ class MessageBubble extends StatelessWidget {
         print(e);
       }
     }
+  }
+
+  void deleteMessage(context) {
+    try{
+      _firestore.collection("chatRoom")
+          .doc(docName).collection("messages")
+          .doc(messageId).delete();
+    }
+    catch(e) {
+      print(e);
+    }
+    Navigator.pop(context);
   }
 
   @override
@@ -321,13 +339,7 @@ class MessageBubble extends StatelessWidget {
                                     ),
                                     TextButton(
                                       onPressed: () {
-                                        try{
-                                          _firestore.collection("chatRoom").doc(docName).collection("messages").doc(messageId).delete();
-                                        }
-                                        catch(e) {
-                                          print(e);
-                                        }
-                                        Navigator.pop(context);
+                                        deleteMessage(context);
                                       },
                                       child: Text(
                                         "Delete",
@@ -396,7 +408,7 @@ class MessageBubbleReceiver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      minimum: EdgeInsets.only(right: MediaQuery.of(context).size.width/4, bottom: 0),
+      minimum: EdgeInsets.only(right: MediaQuery.of(context).size.width/4),
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 2, vertical: 7),
         child: Column(

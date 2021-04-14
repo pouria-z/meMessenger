@@ -3,21 +3,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:memessenger/chat_screen.dart';
 import 'package:memessenger/widgets.dart';
-import 'package:memessenger/chat_list.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 final _firestore = FirebaseFirestore.instance;
 final _auth = FirebaseAuth.instance;
-String search;
 QuerySnapshot searchSnapshot;
-
-var currentUser = _auth.currentUser.email;
-var otherUserEmail = searchSnapshot.docs[0].get('email');
-var otherUserDisplayName = searchSnapshot.docs[0].get('username');
 
 class SearchScreen extends StatefulWidget {
 
-  static final docName = getChatRoomId(_auth.currentUser.email, searchSnapshot.docs[0].get('email'));
   static String route = "search_screen";
 
   @override
@@ -27,9 +20,9 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
 
   bool isLoading = false;
+  String search;
 
-
-  void getusername(value) async {
+  void getUsername(value) async {
     setState(() {
       isLoading = true;
     });
@@ -40,15 +33,12 @@ class _SearchScreenState extends State<SearchScreen> {
           });
         },
     );
-    //print(getChatRoomId(_auth.currentUser.email, otherUserEmail));
     setState(() {
       isLoading = false;
     });
-
   }
 
-  Widget searchList(){
-
+  Widget searchList() {
     return searchSnapshot!= null ? ListView.builder(
       shrinkWrap: true,
       itemCount: searchSnapshot.docs.length,
@@ -74,39 +64,35 @@ class _SearchScreenState extends State<SearchScreen> {
     ///don't cache the searchSnapshot
     searchSnapshot=null;
     ///print the loggedInUser
-    final loggedInUser = _auth.currentUser.email;
-    print(loggedInUser);
+    print(_auth.currentUser.email);
     super.initState();
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       body: SafeArea(
         child: Column(
           children: [
             TextField(
-              onSubmitted: getusername,
+              onSubmitted: getUsername,
               onChanged: (value) {
                 search = value;
                 setState(() {
-                  getusername(search);
+                  getUsername(search);
                 });
               },
+              autofocus: true,
               textInputAction: TextInputAction.search,
               decoration: messageInputDecoration.copyWith(
                 hintText: "Search",
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.black38),
+                  borderRadius: BorderRadius.zero,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black12),
-                ),
-                suffixIcon: Material(
-                  color: Colors.transparent,
-                  child: Icon(Icons.search_rounded, color: Colors.black54,),
+                suffixIcon: Icon(
+                  Icons.search_rounded,
+                  color: Colors.black54,
                 ),
               ),
               cursorColor: Colors.blueAccent,
@@ -118,12 +104,11 @@ class _SearchScreenState extends State<SearchScreen> {
                 SizedBox(height: 10,),
                 CircularProgressIndicator(strokeWidth: 1,),
               ],
-            ) : SizedBox(height: 0,),
+            ) : Container(),
             searchList(),
           ],
         ),
       ),
-
     );
   }
 }
@@ -131,6 +116,49 @@ class _SearchScreenState extends State<SearchScreen> {
 class SearchTile extends StatelessWidget {
 
   final String userName;
+
+  void createChatRoom(context) {
+    if(_auth.currentUser.email!=searchSnapshot.docs[0].get('email')) {
+      try {
+        List<String> users = [
+          searchSnapshot.docs[0].get('email'),
+          _auth.currentUser.email
+        ];
+        Map<String, dynamic> chatRoomMap = {
+          'users': users,
+          'chatroomId' : getChatRoomId(_auth.currentUser.email, searchSnapshot.docs[0].get('email')),
+          'lastMessage': "",
+          'lastMessageSender': "",
+          'lastMessageTime': "",
+        };
+        _firestore.collection('chatRoom')
+            .doc("${getChatRoomId(
+            _auth.currentUser.email,
+            searchSnapshot.docs[0].get('email'))}")
+            .set(chatRoomMap);
+        Navigator.pushReplacement(context, CupertinoPageRoute(
+          builder: (context) => ChatScreen(
+            getChatRoomId(
+                _auth.currentUser.email,
+                searchSnapshot.docs[0].get('email')
+            ),
+          ),
+        ),);
+      }
+      catch (e) {
+        print(e);
+      }
+    }
+    else if(_auth.currentUser.email==searchSnapshot.docs[0].get('email')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              "You can't chat with yourself :)"
+          ),
+        ),
+      );
+    }
+  }
 
   const SearchTile({Key key, this.userName}) : super(key: key);
 
@@ -159,7 +187,6 @@ class SearchTile extends StatelessWidget {
                     Colors.blue[900],
                     Colors.blueAccent,
                   ],
-                  tileMode: TileMode.mirror,
                   begin: Alignment.bottomRight,
                   end: Alignment.centerLeft,
                 ),
@@ -180,31 +207,6 @@ class SearchTile extends StatelessWidget {
     );
   }
 
-  void createChatRoom(context) {
-
-    if(_auth.currentUser.email!=searchSnapshot.docs[0].get('email')) {
-      try {
-        List<String> users = [searchSnapshot.docs[0].get('email'), _auth.currentUser.email];
-        Map<String, dynamic> chatRoomMap = {'users': users, 'chatroomId' : SearchScreen.docName, 'lastMessage': "",
-          'lastMessageSender': "",
-          'lastMessageTime': "",};
-        _firestore.collection('chatRoom').doc("${getChatRoomId(_auth.currentUser.email, searchSnapshot.docs[0].get('email'))}").set(chatRoomMap);
-        Navigator.pushReplacement(context, CupertinoPageRoute(builder: (context) => ChatScreen(getChatRoomId(_auth.currentUser.email, searchSnapshot.docs[0].get('email'))),));
-      } catch (e) {
-        print(e);
-      }
-    }
-    else if(_auth.currentUser.email==searchSnapshot.docs[0].get('email')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "You can't chat with yourself :)"
-          ),
-        ),
-      );
-    }
-
-  }
 }
 
 getChatRoomId(String a, String b) {
@@ -215,7 +217,4 @@ getChatRoomId(String a, String b) {
     return "$a\_$b";
   }
 }
-
-
-
 
