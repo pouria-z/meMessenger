@@ -7,6 +7,7 @@ import 'package:memessenger/chat_list.dart';
 import 'package:memessenger/search_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 
 
 void main() async {
@@ -29,23 +30,31 @@ class _meMessengerState extends State<meMessenger> {
 
     FirebaseAuth _auth = FirebaseAuth.instance;
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: "meMessenger",
-      initialRoute: _auth.currentUser != null && _auth.currentUser.emailVerified
-          ? ChatList.route
-          : WelcomeScreen.route,
-      routes: {
-        WelcomeScreen.route: (context) => WelcomeScreen(),
-        RegisterScreen.route: (context) => RegisterScreen(),
-        LoginScreen.route: (context) => LoginScreen(),
-        ChatList.route: (context) => ChatList(),
-        SearchScreen.route: (context) => SearchScreen(),
-      },
-      theme: ThemeData.light().copyWith(
-        scaffoldBackgroundColor: Colors.grey[100]
+    return AdaptiveTheme(
+      light: ThemeData.light().copyWith(
+        scaffoldBackgroundColor: Colors.grey[100],
+        primaryColor: Color(0xFF524C97),
       ),
-      //darkTheme: ThemeData.dark(),
+      dark: ThemeData.dark().copyWith(
+        primaryColor: Color(0xFF222222),
+      ),
+      initial: AdaptiveThemeMode.light,
+      builder: (theme, darkTheme) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: "meMessenger",
+        theme: theme,
+        darkTheme: darkTheme,
+        initialRoute: _auth.currentUser != null && _auth.currentUser.emailVerified
+            ? ChatList.route
+            : WelcomeScreen.route,
+        routes: {
+          WelcomeScreen.route: (context) => WelcomeScreen(),
+          RegisterScreen.route: (context) => RegisterScreen(),
+          LoginScreen.route: (context) => LoginScreen(),
+          ChatList.route: (context) => ChatList(),
+          SearchScreen.route: (context) => SearchScreen(),
+        },
+      ),
     );
   }
 }

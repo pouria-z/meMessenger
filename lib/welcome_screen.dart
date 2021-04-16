@@ -20,6 +20,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
 
   AnimationController controller;
   Animation animation;
+  Animation animationDark;
 
   @override
   void initState() {
@@ -29,6 +30,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
       duration: Duration(seconds: 1),
     );
     animation = ColorTween(begin: Colors.grey, end: Colors.white).animate(controller);
+    animationDark = ColorTween(begin: Color(0xFF121212), end: Color(0xFF2E2E2E)).animate(controller);
     controller.forward();
     controller.addListener(() {
       setState(() {});
@@ -45,7 +47,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: animation.value,
+      backgroundColor: Theme.of(context).primaryColor == Color(0xFF222222) ? animationDark.value : animation.value,
       body: Padding(
         padding: EdgeInsets.all(15),
         child: Column(
@@ -64,9 +66,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                 ),
                 AnimatedTextKit(
                   animatedTexts: [
-                    TyperAnimatedText("meMESSENGER",
+                    TyperAnimatedText("meMessenger",
                       textStyle: myTextStyleBold.copyWith(
-                        color: Colors.black54,
+                        color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
                         fontSize: 28,
                       ),
                       speed: Duration(milliseconds: 100),

@@ -5,6 +5,7 @@ import 'package:memessenger/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+//TODO: toLowerCase the username to compare the users in database
 
 class RegisterScreen extends StatefulWidget {
 
@@ -55,14 +56,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Hero(
-              tag: "icon",
-              child: Image.asset(
-                'assets/icon/icon.png',
-                width: MediaQuery.of(context).size.width/2,
-                height: MediaQuery.of(context).size.height/6,
+            Flexible(
+              child: Hero(
+                tag: "icon",
+                child: Image.asset(
+                  'assets/icon/icon.png',
+                  width: MediaQuery.of(context).size.width/2,
+                  height: MediaQuery.of(context).size.height/5,
+                ),
               ),
             ),
+            SizedBox(height: MediaQuery.of(context).size.height/80,),
+            ///Username Field
             TextFormField(
               onChanged: (value) {
                 username = value;
@@ -76,9 +81,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
               decoration: myInputDecoration.copyWith(
                 hintText: "Enter Your Username",
                 labelText: "Username",
+                hintStyle: myTextStyle.copyWith(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                ),
+                labelStyle: myTextStyle.copyWith(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                ),
               ),
             ),
             SizedBox(height: MediaQuery.of(context).size.height/80,),
+            ///Email Field
             TextFormField(
               onChanged: (value) {
                 email = value;
@@ -93,9 +107,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
               decoration: myInputDecoration.copyWith(
                 hintText: "Enter Your Email Address",
                 labelText: "Email",
+                hintStyle: myTextStyle.copyWith(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                ),
+                labelStyle: myTextStyle.copyWith(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                ),
               ),
             ),
             SizedBox(height: MediaQuery.of(context).size.height/80,),
+            ///Password Field
             TextFormField(
               onChanged: (value) {
                 password = value;
@@ -115,9 +138,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
               decoration: myInputDecoration.copyWith(
                 hintText: "Enter Your Password",
                 labelText: "Password",
+                hintStyle: myTextStyle.copyWith(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                ),
+                labelStyle: myTextStyle.copyWith(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                ),
               ),
             ),
             SizedBox(height: MediaQuery.of(context).size.height/80,),
+            ///Confirm Password Field
             TextFormField(
               onChanged: (value) {
                 confirmPassword = value;
@@ -137,9 +169,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
               decoration: myInputDecoration.copyWith(
                 hintText: "Enter Your Password Again",
                 labelText: "Confirm Password",
+                hintStyle: myTextStyle.copyWith(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                ),
+                labelStyle: myTextStyle.copyWith(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                ),
               ),
             ),
             SizedBox(height: MediaQuery.of(context).size.height/50,),
+            ///Register Button
             Hero(
               tag: "register",
               child: MyButton(
@@ -147,20 +188,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 color: Colors.blue[900],
                 onPressed: () async {
                   try{
-                    _firestore.collection('users').where('username', isEqualTo: username).get().then((value) {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    await _firestore.collection('users')
+                        .where('username', isEqualTo: username)
+                        .get()
+                        .then((value) {
                       setState(() {
                         snapshot=value;
                       });
                       },
                     );
+                    ///Check if every field is fine
                     if (email.isNotEmpty
                         && password.isNotEmpty
                         && password==confirmPassword
                         && username.isNotEmpty
                         && snapshot.docs[0].get('username')!=username){
-                      setState(() {
-                        isLoading = true;
-                      });
                       var newUser = await _auth.createUserWithEmailAndPassword(email: email, password: password);
                       newUser.user.sendEmailVerification();
                       newUser.user.updateProfile(displayName: username);
@@ -173,7 +218,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       showDialog(context: context, builder: (context) {
                           return AlertDialog(
                             title: Text(
-                              "VERIFY YOUR EMAIL",
+                              "Verify Your Email",
                               style: myTextStyleBold.copyWith(
                                 color: Colors.black,
                               ),
@@ -203,21 +248,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         },
                       );
                     }
+                    else if (email.isEmpty
+                        || password.isEmpty
+                        || confirmPassword.isEmpty
+                        || username.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Please fill out all the fields!"),
+                        ),
+                      );
+                    }
+                    ///Username already taken error
                     else if(snapshot.docs[0].get('username')==username){
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Username already taken!"),
                         ),
                       );
                     }
+                    ///Passwords matching error
                     else if(password!=confirmPassword){
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Passwords don't match!"),
-                        ),
-                      );
-                    }
-                    else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Please fill out all the fields!"),
                         ),
                       );
                     }

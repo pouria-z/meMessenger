@@ -7,6 +7,8 @@ import 'package:memessenger/search_screen.dart';
 import 'package:memessenger/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:memessenger/welcome_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 
 final _auth = FirebaseAuth.instance;
 final _firestore = FirebaseFirestore.instance;
@@ -20,6 +22,40 @@ class ChatList extends StatefulWidget {
 }
 
 class _ChatListState extends State<ChatList> {
+
+  bool switchValue = false;
+
+  @override
+  void initState() {
+    super.initState();
+    getSwitchValues();
+    loadSharedPreferencesAndSwitchState();
+  }
+
+  getSwitchValues() async {
+    switchValue = await getSwitchState();
+
+  }
+
+  Future<bool> saveSwitchState(bool value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool("switchState", value);
+    print('Switch Value saved $value');
+    return prefs.setBool("switchState", value);
+  }
+
+  Future<bool> getSwitchState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool switchValue = prefs.getBool("switchState");
+    print(switchValue);
+
+    return switchValue;
+  }
+
+  void loadSharedPreferencesAndSwitchState() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    switchValue = preferences.getBool("switchState");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,13 +89,43 @@ class _ChatListState extends State<ChatList> {
           ),
         ],
       ),
+      drawer: Drawer(
+        child: SafeArea(
+          child: ListTile(
+            title: Text(
+              "Dark Mode"
+            ),
+            trailing: Switch(
+              value: switchValue,
+              activeColor: Colors.white,
+              activeTrackColor: Colors.green[400],
+              inactiveTrackColor: Colors.white54,
+              onChanged: (bool value) {
+                setState(() {
+                  switchValue = value;
+                  saveSwitchState(value);
+                  AdaptiveTheme.of(context).mode.isLight ?
+                  AdaptiveTheme.of(context).setDark() :
+                  AdaptiveTheme.of(context).setLight();
+                  print('Saved state is $switchValue');
+                });
+                print(switchValue);
+              },
+            ),
+          ),
+        ),
+      ),
       body: ChatStreamer(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _auth.signOut();
           Navigator.pushReplacementNamed(context, WelcomeScreen.route);
         },
-        child: Icon(Icons.logout),
+        child: Icon(
+          Icons.logout,
+          color: Colors.white,
+        ),
+        backgroundColor: Theme.of(context).primaryColor,
         heroTag: "floating",
       ),
     );
@@ -147,7 +213,7 @@ class ChatTile extends StatelessWidget {
           title: Text(
             title,
             style: myTextStyleBold.copyWith(
-              color: Colors.black,
+              color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white : Colors.black,
               fontSize: 15,
             ),
           ),
@@ -156,14 +222,14 @@ class ChatTile extends StatelessWidget {
               Text(
                 "You: ",
                 style: myTextStyle.copyWith(
-                    color: Colors.black45,
+                    color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black45,
                     fontSize: 14,
                 ),
               ),
               Text(
                 lastMessage.length > 30 ? lastMessage.substring(0,30) + "..." : lastMessage,
                 style: myTextStyle.copyWith(
-                    color: Colors.black45,
+                    color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black45,
                     fontSize: 14,
                 ),
               ),
@@ -172,14 +238,14 @@ class ChatTile extends StatelessWidget {
           Text(
             lastMessage.length > 35 ? lastMessage.substring(0,35) + "..." : lastMessage,
             style: myTextStyle.copyWith(
-              color: Colors.black45,
+              color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black45,
               fontSize: 14,
             ),
           ),
           trailing: Text(
             lastMessageTime,
             style: myTextStyle.copyWith(
-              color: Colors.black45,
+              color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black45,
               fontSize: 14,
             ),
           ),

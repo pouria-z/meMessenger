@@ -39,37 +39,64 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Hero(
-              tag: "icon",
-              child: Image.asset(
-                'assets/icon/icon.png',
-                width: MediaQuery.of(context).size.width/2,
-                height: MediaQuery.of(context).size.height/6,
+            Flexible(
+              child: Hero(
+                tag: "icon",
+                child: Image.asset(
+                  'assets/icon/icon.png',
+                  width: MediaQuery.of(context).size.width/2,
+                  height: MediaQuery.of(context).size.height/5,
+                ),
               ),
             ),
+            SizedBox(height: MediaQuery.of(context).size.height/80,),
+            ///Email Field
             TextFormField(
               onChanged: (value) {
                 email = value;
               },
+              cursorColor: Colors.blueAccent,
+              cursorHeight: 18,
+              cursorWidth: 1.5,
               validator: validateEmail,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               textAlign: TextAlign.center,
               keyboardType: TextInputType.emailAddress,
               decoration: myInputDecoration.copyWith(
                 hintText: "Enter Your Email Address",
+                hintStyle: myTextStyle.copyWith(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                ),
                 labelText: "Email",
+                labelStyle: myTextStyle.copyWith(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                ),
               ),
             ),
             SizedBox(height: MediaQuery.of(context).size.height/80,),
+            ///Password Field
             TextFormField(
               onChanged: (value) {
                 password = value;
               },
+              cursorColor: Colors.blueAccent,
+              cursorHeight: 18,
+              cursorWidth: 1.5,
               textAlign: TextAlign.center,
               obscureText: true,
               decoration: myInputDecoration.copyWith(
                 hintText: "Enter Your Password",
+                hintStyle: myTextStyle.copyWith(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                ),
                 labelText: "Password",
+                labelStyle: myTextStyle.copyWith(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                ),
               ),
             ),
             SizedBox(height: MediaQuery.of(context).size.height/50,),
@@ -84,10 +111,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       setState(() {
                         isLoading = true;
                       });
-                      var newUser = await _auth.signInWithEmailAndPassword(email: email, password: password);
-                      newUser.user.emailVerified ?
+                      var user = await _auth.signInWithEmailAndPassword(email: email, password: password);
+                      user.user.emailVerified ?
                       Navigator.pushNamedAndRemoveUntil(context, ChatList.route, (route) => false) : ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Email has not been verified yet!"),
+                        ),
+                      );
+                    }
+                    else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Please fill out all the fields!"),
                         ),
                       );
                     }
@@ -119,12 +152,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         " from this device due to unusual activity. Try again later."){
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Too many requests! Try again later."),
-                        ),
-                      );
-                    }
-                    else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Error 403 (Forbidden)"),
                         ),
                       );
                     }

@@ -53,7 +53,11 @@ class _SearchScreenState extends State<SearchScreen> {
         tag: "search",
         child: Material(
           color: Colors.transparent,
-          child: Icon(Icons.search_rounded, size: 200, color: Colors.black12,),
+          child: Icon(
+            Icons.search_rounded,
+            size: 200,
+            color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white12 : Colors.black12,
+          ),
         ),
       ),
     );
@@ -86,13 +90,23 @@ class _SearchScreenState extends State<SearchScreen> {
               textInputAction: TextInputAction.search,
               decoration: messageInputDecoration.copyWith(
                 hintText: "Search",
+                hintStyle: TextStyle(
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black45,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                  )
+                ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.black38),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white38 : Colors.black38,
+                  ),
                   borderRadius: BorderRadius.zero,
                 ),
                 suffixIcon: Icon(
                   Icons.search_rounded,
-                  color: Colors.black54,
+                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
                 ),
               ),
               cursorColor: Colors.blueAccent,
@@ -170,7 +184,7 @@ class SearchTile extends StatelessWidget {
           title: Text(
             userName,
             style: myTextStyleBold.copyWith(
-              color: Colors.black
+              color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white : Colors.black,
             ),
           ),
           trailing: GestureDetector(
@@ -195,7 +209,7 @@ class SearchTile extends StatelessWidget {
                 child: Text(
                   "Message",
                   style: myTextStyle.copyWith(
-                    fontSize: 12
+                    fontSize: 12,
                   ),
                 ),
               ),
