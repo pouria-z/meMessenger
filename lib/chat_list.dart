@@ -97,13 +97,8 @@ class _ChatListState extends State<ChatList> {
                 setState(() {
                   _chosenValue = value;
                   saveThemeValue(_chosenValue);
-                  _chosenValue=='Light' && AdaptiveTheme.of(context).mode.isDark
-                      ? AdaptiveTheme.of(context).setLight()
-                  : _chosenValue=='Light' && AdaptiveTheme.of(context).mode.isLight
-                      ? null
-                  : _chosenValue=='Dark' && AdaptiveTheme.of(context).mode.isLight
-                      ? AdaptiveTheme.of(context).setDark()
-                  : null;
+                  _chosenValue=='Light' ? AdaptiveTheme.of(context).setLight()
+                      : AdaptiveTheme.of(context).setDark();
                 });
               },
               items: <String>[
