@@ -5,7 +5,6 @@ import 'package:memessenger/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-//TODO: toLowerCase the username to compare the users in database
 
 class RegisterScreen extends StatefulWidget {
 
@@ -25,6 +24,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String password;
   String confirmPassword;
   bool isLoading = false;
+
+  void checkUser(value) async {
+    try{
+        await _firestore
+            .collection('users')
+            .get()
+            .then(
+            (value) {
+          setState(() {
+            snapshot = value;
+          });
+        },
+      );
+    }catch(e){
+      print(e);
+    }
+  }
   String validateEmail(String value) {
     Pattern pattern =
         r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
@@ -39,10 +55,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String validateUsername(String value) {
     Pattern pattern = r'^[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$';
     RegExp regex = RegExp(pattern);
-    if (!regex.hasMatch(value) || value == null)
+    final usersDoc = snapshot.docs;
+    List<String> usersList = [];
+    for(var user in usersDoc) {
+      final checkUser = user.get('username');
+      usersList.add(checkUser);
+    }
+    if (!regex.hasMatch(value) || value == null || value.contains(" "))
       return 'Please Enter a Valid Username!';
     else if (value.length < 3) {
       return 'Username Should be At Least 3 Characters!';
+    }
+    else if (usersList.contains(username)){
+      return 'Already Taken!';
     }
     else
       return null;
@@ -69,8 +94,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
             SizedBox(height: MediaQuery.of(context).size.height/80,),
             ///Username Field
             TextFormField(
+              onTap: () {
+                setState(() {
+                  checkUser(username);
+                });
+              },
               onChanged: (value) {
                 username = value;
+                setState(() {
+                  checkUser(username);
+                });
               },
               validator: validateUsername,
               cursorColor: Colors.blueAccent,
@@ -97,6 +130,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               onChanged: (value) {
                 email = value;
               },
+
               validator: validateEmail,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               textAlign: TextAlign.center,
@@ -187,25 +221,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 title: isLoading==false ? "REGISTER" : "",
                 color: Colors.blue[900],
                 onPressed: () async {
+                  setState(() {
+                    isLoading = true;
+                  });
                   try{
-                    setState(() {
-                      isLoading = true;
-                    });
-                    await _firestore.collection('users')
-                        .where('username', isEqualTo: username)
-                        .get()
-                        .then((value) {
-                      setState(() {
-                        snapshot=value;
-                      });
-                      },
-                    );
+                    final usersDoc = snapshot.docs;
+                    List<String> usersList = [];
+                    for(var user in usersDoc){
+                      final checkUser = user.get('username');
+                      usersList.add(checkUser);
+                    }
                     ///Check if every field is fine
                     if (email.isNotEmpty
                         && password.isNotEmpty
                         && password==confirmPassword
                         && username.isNotEmpty
-                        && snapshot.docs[0].get('username')!=username){
+                        && !usersList.contains(username)
+                    ){
                       var newUser = await _auth.createUserWithEmailAndPassword(email: email, password: password);
                       newUser.user.sendEmailVerification();
                       newUser.user.updateProfile(displayName: username);
@@ -238,7 +270,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 child: Text(
                                   "OK",
                                   style: myTextStyleBold.copyWith(
-                                    color: Colors.black54,
+                                    color: Colors.black,
                                     fontSize: 16,
                                   ),
                                 ),
@@ -258,7 +290,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       );
                     }
                     ///Username already taken error
-                    else if(snapshot.docs[0].get('username')==username){
+                    else if(usersList.contains(username)){
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Username already taken!"),
                         ),
