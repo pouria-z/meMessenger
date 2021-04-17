@@ -23,38 +23,29 @@ class ChatList extends StatefulWidget {
 
 class _ChatListState extends State<ChatList> {
 
-  bool switchValue = false;
+  String _chosenValue;
 
   @override
   void initState() {
     super.initState();
-    getSwitchValues();
-    loadSharedPreferencesAndSwitchState();
+    getThemeValue();
   }
 
-  getSwitchValues() async {
-    switchValue = await getSwitchState();
-
+  getThemeValue() async {
+    _chosenValue = await getThemeState();
   }
 
-  Future<bool> saveSwitchState(bool value) async {
+  Future<String> saveThemeValue(String value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setBool("switchState", value);
-    print('Switch Value saved $value');
-    return prefs.setBool("switchState", value);
+    prefs.setString("themeValue", value);
+    print('Theme mode saved $value');
   }
 
-  Future<bool> getSwitchState() async {
+  Future<String> getThemeState() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool switchValue = prefs.getBool("switchState");
-    print(switchValue);
-
-    return switchValue;
-  }
-
-  void loadSharedPreferencesAndSwitchState() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    switchValue = preferences.getBool("switchState");
+    String stringValue = prefs.getString("themeValue");
+    print(stringValue);
+    return stringValue;
   }
 
   @override
@@ -93,24 +84,38 @@ class _ChatListState extends State<ChatList> {
         child: SafeArea(
           child: ListTile(
             title: Text(
-              "Dark Mode"
+              "Theme",
+              style: myTextStyle.copyWith(
+                color: AdaptiveTheme.of(context).mode.isDark ? Colors.white
+                    : Colors.black,
+              ),
             ),
-            trailing: Switch(
-              value: switchValue,
-              activeColor: Colors.white,
-              activeTrackColor: Colors.green[400],
-              inactiveTrackColor: Colors.white54,
-              onChanged: (bool value) {
+            trailing: DropdownButton<String>(
+              icon: Icon(Icons.arrow_drop_down_rounded),
+              value: _chosenValue,
+              onChanged: (String value) {
                 setState(() {
-                  switchValue = value;
-                  saveSwitchState(value);
-                  AdaptiveTheme.of(context).mode.isLight ?
-                  AdaptiveTheme.of(context).setDark() :
-                  AdaptiveTheme.of(context).setLight();
-                  print('Saved state is $switchValue');
+                  _chosenValue = value;
+                  saveThemeValue(_chosenValue);
+                  _chosenValue=='Light' && AdaptiveTheme.of(context).mode.isDark
+                      ? AdaptiveTheme.of(context).setLight()
+                  : _chosenValue=='Light' && AdaptiveTheme.of(context).mode.isLight
+                      ? null
+                  : _chosenValue=='Dark' && AdaptiveTheme.of(context).mode.isLight
+                      ? AdaptiveTheme.of(context).setDark()
+                  : null;
                 });
-                print(switchValue);
               },
+              items: <String>[
+                'Light',
+                'Dark',
+              ]
+                  .map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
             ),
           ),
         ),
