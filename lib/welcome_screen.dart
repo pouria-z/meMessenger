@@ -4,6 +4,7 @@ import 'package:memessenger/login_screen.dart';
 import 'package:memessenger/register_screen.dart';
 import 'package:memessenger/widgets.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 
 
 
@@ -47,7 +48,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).primaryColor == Color(0xFF222222) ? animationDark.value : animation.value,
+      backgroundColor: AdaptiveTheme.of(context).mode.isDark ? animationDark.value : animation.value,
       body: Padding(
         padding: EdgeInsets.all(15),
         child: Column(
@@ -68,7 +69,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                   animatedTexts: [
                     TyperAnimatedText("meMessenger",
                       textStyle: myTextStyleBold.copyWith(
-                        color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                        color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black54,
                         fontSize: 28,
                       ),
                       speed: Duration(milliseconds: 100),

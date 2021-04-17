@@ -4,6 +4,7 @@ import 'package:memessenger/login_screen.dart';
 import 'package:memessenger/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 
 
 class RegisterScreen extends StatefulWidget {
@@ -24,20 +25,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String password;
   String confirmPassword;
   bool isLoading = false;
+  bool usernameIsValid = false;
+  bool emailIsValid = false;
+  bool passwordIsValid = false;
+  bool confirmPasswordIsValid = false;
+  bool hidePassword = true;
 
-  void checkUser(value) async {
+  void checkUser() async {
     try{
-        await _firestore
-            .collection('users')
+        await _firestore.collection('users')
             .get()
             .then(
             (value) {
-          setState(() {
-            snapshot = value;
-          });
-        },
-      );
-    }catch(e){
+              setState(() {
+                snapshot = value;
+              });
+              },
+        );
+    }
+    catch(e) {
       print(e);
     }
   }
@@ -47,10 +53,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
         r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
         r"{0,253}[a-zA-Z0-9])?)*$";
     RegExp regex = RegExp(pattern);
-    if (!regex.hasMatch(value) || value == null)
+    if (!regex.hasMatch(value) || value == null) {
+      Future.delayed(Duration.zero).then((_){
+        setState((){
+          emailIsValid = false;
+        });
+      });
       return 'Please Enter a Valid Email Address!';
-    else
+    }
+    else {
+      Future.delayed(Duration.zero).then((_){
+        setState((){
+          emailIsValid = true;
+        });
+      });
       return null;
+    }
   }
   String validateUsername(String value) {
     Pattern pattern = r'^[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$';
@@ -61,16 +79,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final checkUser = user.get('username');
       usersList.add(checkUser);
     }
-    if (!regex.hasMatch(value) || value == null || value.contains(" "))
+    if (!regex.hasMatch(value) || value == null || value.contains(" ")) {
+      Future.delayed(Duration.zero).then((_){
+        setState((){
+          usernameIsValid = false;
+        });
+      });
       return 'Please Enter a Valid Username!';
+    }
     else if (value.length < 3) {
+      Future.delayed(Duration.zero).then((_){
+        setState((){
+          usernameIsValid = false;
+        });
+      });
       return 'Username Should be At Least 3 Characters!';
     }
     else if (usersList.contains(username)){
-      return 'Already Taken!';
+      Future.delayed(Duration.zero).then((_){
+        setState((){
+          usernameIsValid = false;
+        });
+      });
+      return 'Username Already Taken!';
     }
-    else
+    else {
+      Future.delayed(Duration.zero).then((_){
+        setState((){
+          usernameIsValid = true;
+        });
+      });
       return null;
+    }
+  }
+
+  @override
+  void initState() {
+    checkUser();
+    super.initState();
   }
 
   @override
@@ -94,23 +140,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
             SizedBox(height: MediaQuery.of(context).size.height/80,),
             ///Username Field
             TextFormField(
-              onTap: () {
-                setState(() {
-                  checkUser(username);
-                });
-              },
               onChanged: (value) {
                 username = value;
                 setState(() {
-                  checkUser(username);
+                  checkUser();
                 });
               },
               validator: validateUsername,
-              cursorColor: Colors.blueAccent,
               cursorHeight: 18,
               cursorWidth: 1.5,
               autovalidateMode: AutovalidateMode.onUserInteraction,
-              textAlign: TextAlign.center,
               decoration: myInputDecoration.copyWith(
                 hintText: "Enter Your Username",
                 labelText: "Username",
@@ -130,12 +169,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               onChanged: (value) {
                 email = value;
               },
-
               validator: validateEmail,
               autovalidateMode: AutovalidateMode.onUserInteraction,
-              textAlign: TextAlign.center,
               keyboardType: TextInputType.emailAddress,
-              cursorColor: Colors.blueAccent,
               cursorHeight: 18,
               cursorWidth: 1.5,
               decoration: myInputDecoration.copyWith(
@@ -159,17 +195,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
               },
               validator: (value) {
                 if(value.isEmpty || value.length<6){
+                  Future.delayed(Duration.zero).then((_){
+                    setState((){
+                      passwordIsValid = false;
+                    });
+                  });
                   return "Password Should be At Least 6 Characters!";
                 }
-                return null;
+                else {
+                  Future.delayed(Duration.zero).then((_){
+                    setState((){
+                      passwordIsValid = true;
+                    });
+                  });
+                  return null;
+                }
               },
               autovalidateMode: AutovalidateMode.onUserInteraction,
-              textAlign: TextAlign.center,
-              obscureText: true,
-              cursorColor: Colors.blueAccent,
+              obscureText: hidePassword,
               cursorHeight: 18,
               cursorWidth: 1.5,
               decoration: myInputDecoration.copyWith(
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    hidePassword == true ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                    color: hidePassword == false && AdaptiveTheme.of(context).mode.isLight ? Color(0xFF524C97)
+                        : hidePassword == false && AdaptiveTheme.of(context).mode.isDark ? Color(0xFF5EE3C3)
+                        : Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      hidePassword=!hidePassword;
+                    });
+                  },
+                ),
                 hintText: "Enter Your Password",
                 labelText: "Password",
                 hintStyle: myTextStyle.copyWith(
@@ -190,17 +249,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
               },
               validator: (value) {
                 if(value.isEmpty || value.characters!=password.characters){
+                  Future.delayed(Duration.zero).then((_){
+                    setState((){
+                      confirmPasswordIsValid = false;
+                    });
+                  });
                   return "Passwords Don't Match!";
                 }
-                return null;
+                else {
+                  Future.delayed(Duration.zero).then((_){
+                    setState((){
+                      confirmPasswordIsValid = true;
+                    });
+                  });
+                  return null;
+                }
               },
               autovalidateMode: AutovalidateMode.onUserInteraction,
-              textAlign: TextAlign.center,
-              obscureText: true,
-              cursorColor: Colors.blueAccent,
+              obscureText: hidePassword,
               cursorHeight: 18,
               cursorWidth: 1.5,
               decoration: myInputDecoration.copyWith(
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    hidePassword == true ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                    color: hidePassword == false && AdaptiveTheme.of(context).mode.isLight ? Color(0xFF524C97)
+                        : hidePassword == false && AdaptiveTheme.of(context).mode.isDark ? Color(0xFF5EE3C3)
+                        : Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      hidePassword=!hidePassword;
+                    });
+                  },
+                ),
                 hintText: "Enter Your Password Again",
                 labelText: "Confirm Password",
                 hintStyle: myTextStyle.copyWith(
@@ -219,8 +301,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
               tag: "register",
               child: MyButton(
                 title: isLoading==false ? "REGISTER" : "",
-                color: Colors.blue[900],
-                onPressed: () async {
+                color:
+                usernameIsValid == false
+                || emailIsValid == false
+                || passwordIsValid == false
+                || confirmPasswordIsValid == false
+                    ? Colors.grey
+                    : Colors.blue[900],
+                onPressed:
+                    ///check if every field is fine
+                usernameIsValid == false
+                || emailIsValid == false
+                || passwordIsValid == false
+                || confirmPasswordIsValid == false
+                    ? null
+                    : () async {
                   setState(() {
                     isLoading = true;
                   });
@@ -231,14 +326,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       final checkUser = user.get('username');
                       usersList.add(checkUser);
                     }
-                    ///Check if every field is fine
-                    if (email.isNotEmpty
-                        && password.isNotEmpty
-                        && password==confirmPassword
-                        && username.isNotEmpty
-                        && !usersList.contains(username)
-                    ){
-                      var newUser = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+                    ///Check if username is valid again
+                    if (!usersList.contains(username)){
+                      var newUser = await _auth.createUserWithEmailAndPassword(
+                          email: email, password: password);
                       newUser.user.sendEmailVerification();
                       newUser.user.updateProfile(displayName: username);
                       _firestore.collection("users").doc(email).set(
@@ -280,26 +371,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         },
                       );
                     }
-                    else if (email.isEmpty
-                        || password.isEmpty
-                        || confirmPassword.isEmpty
-                        || username.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Please fill out all the fields!"),
-                        ),
-                      );
-                    }
                     ///Username already taken error
                     else if(usersList.contains(username)){
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Username already taken!"),
-                        ),
-                      );
-                    }
-                    ///Passwords matching error
-                    else if(password!=confirmPassword){
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Passwords don't match!"),
                         ),
                       );
                     }
@@ -320,13 +395,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       );
                     }
-                    else if(e.toString()=="[firebase_auth/weak-password] "
-                        "Password should be at least 6 characters"){
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Password should be at least 6 characters!"),
-                        ),
-                      );
-                    }
                     else if(e.toString()=="[firebase_auth/too-many-requests] We have blocked all requests"
                         " from this device due to unusual activity. Try again later."){
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -339,7 +407,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     isLoading = false;
                   });
                 },
-                widget: isLoading==false ? SizedBox(height: 0,) : SizedBox(
+                widget: isLoading==false ? Container() : SizedBox(
                   height: 20,
                   width: 20,
                   child: CircularProgressIndicator(

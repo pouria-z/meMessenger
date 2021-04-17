@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:memessenger/chat_screen.dart';
 import 'package:memessenger/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 
 final _firestore = FirebaseFirestore.instance;
 final _auth = FirebaseAuth.instance;
@@ -56,7 +57,7 @@ class _SearchScreenState extends State<SearchScreen> {
           child: Icon(
             Icons.search_rounded,
             size: 200,
-            color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white12 : Colors.black12,
+            color: AdaptiveTheme.of(context).mode.isDark ? Colors.white12 : Colors.black12,
           ),
         ),
       ),
@@ -91,22 +92,22 @@ class _SearchScreenState extends State<SearchScreen> {
               decoration: messageInputDecoration.copyWith(
                 hintText: "Search",
                 hintStyle: TextStyle(
-                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black45,
+                  color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black45,
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                    color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                    color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black54,
                   )
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                    color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white38 : Colors.black38,
+                    color: AdaptiveTheme.of(context).mode.isDark ? Colors.white38 : Colors.black38,
                   ),
                   borderRadius: BorderRadius.zero,
                 ),
                 suffixIcon: Icon(
                   Icons.search_rounded,
-                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                  color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black54,
                 ),
               ),
               cursorColor: Colors.blueAccent,
@@ -184,7 +185,7 @@ class SearchTile extends StatelessWidget {
           title: Text(
             userName,
             style: myTextStyleBold.copyWith(
-              color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white : Colors.black,
+              color: AdaptiveTheme.of(context).mode.isDark ? Colors.white : Colors.black,
             ),
           ),
           trailing: GestureDetector(

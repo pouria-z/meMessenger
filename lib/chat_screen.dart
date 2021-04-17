@@ -7,6 +7,7 @@ import 'package:memessenger/chat_list.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:memessenger/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 
 
 final _firestore = FirebaseFirestore.instance;
@@ -113,7 +114,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
       bottomSheet: Material(
-        color: Theme.of(context).primaryColor == Color(0xFF222222) ? Color(0xFF222222) : Colors.white,
+        color: AdaptiveTheme.of(context).mode.isDark ? Color(0xFF222222) : Colors.white,
         child: TextField(
           autocorrect: true,
           maxLines: null,
@@ -127,20 +128,20 @@ class _ChatScreenState extends State<ChatScreen> {
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(
                 width: 0.5,
-                color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white38 : Color(0xFF524C97),
+                color: AdaptiveTheme.of(context).mode.isDark ? Colors.white38 : Color(0xFF524C97),
               ),
               borderRadius: BorderRadius.zero,
             ),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(
                 width: 0.5,
-                color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white38 : Color(0xFF524C97),
+                color: AdaptiveTheme.of(context).mode.isDark ? Colors.white38 : Color(0xFF524C97),
               ),
               borderRadius: BorderRadius.zero,
             ),
             hintText: "Message",
             hintStyle: myTextStyle.copyWith(
-              color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white38 : Colors.black38,
+              color: AdaptiveTheme.of(context).mode.isDark ? Colors.white38 : Colors.black38,
               fontSize: 16
             ),
             suffixIcon: IconButton(
@@ -281,7 +282,7 @@ class MessageBubble extends StatelessWidget {
             Text(
               sender,
               style: myTextStyle.copyWith(
-                color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white38 : Colors.black38,
+                color: AdaptiveTheme.of(context).mode.isDark ? Colors.white38 : Colors.black38,
                 fontSize: 12,
               ),
             ),
@@ -334,13 +335,13 @@ class MessageBubble extends StatelessWidget {
                                   title: Text(
                                     "Delete Message",
                                     style: myTextStyleBold.copyWith(
-                                      color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white : Colors.black,
+                                      color: AdaptiveTheme.of(context).mode.isDark ? Colors.white : Colors.black,
                                     ),
                                   ),
                                   content: Text(
                                     "Are you sure you want to delete this message for both sides?",
                                     style: myTextStyle.copyWith(
-                                      color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white60 : Colors.black54,
+                                      color: AdaptiveTheme.of(context).mode.isDark ? Colors.white60 : Colors.black54,
                                     ),
                                   ),
                                   actions: [
@@ -351,7 +352,7 @@ class MessageBubble extends StatelessWidget {
                                       child: Text(
                                         "Cancel",
                                         style: myTextStyleBold.copyWith(
-                                          color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white60 : Colors.black54,
+                                          color: AdaptiveTheme.of(context).mode.isDark ? Colors.white60 : Colors.black54,
                                           fontSize: 16,
                                         ),
                                       ),
@@ -386,7 +387,7 @@ class MessageBubble extends StatelessWidget {
                   topRight: Radius.circular(4)
                 ),
                 elevation: 5,
-                color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.grey[500] : Color(0xFF524C97),
+                color: AdaptiveTheme.of(context).mode.isDark ? Colors.grey[500] : Color(0xFF524C97),
                   child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                   child: Column(
@@ -395,7 +396,7 @@ class MessageBubble extends StatelessWidget {
                       Text(
                         text,
                         style: myTextStyle.copyWith(
-                          color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.black : Colors.white,
+                          color: AdaptiveTheme.of(context).mode.isDark ? Colors.black : Colors.white,
                           fontSize: 15,
                         ),
                       ),
@@ -403,7 +404,7 @@ class MessageBubble extends StatelessWidget {
                         time,
                         style: myTextStyle.copyWith(
                           fontSize: 10,
-                          color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.black54 : Colors.white54,
+                          color: AdaptiveTheme.of(context).mode.isDark ? Colors.black54 : Colors.white54,
                         ),
                       ),
                     ],
@@ -438,7 +439,7 @@ class MessageBubbleReceiver extends StatelessWidget {
             Text(
               sender,
               style: myTextStyle.copyWith(
-                color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white38 : Colors.black38,
+                color: AdaptiveTheme.of(context).mode.isDark ? Colors.white38 : Colors.black38,
                 fontSize: 12,
               ),
             ),
@@ -448,7 +449,7 @@ class MessageBubbleReceiver extends StatelessWidget {
                 topLeft: Radius.circular(4),
               ),
               elevation: 5,
-              color: Theme.of(context).primaryColor == Color(0xFF222222) ? Color(0xFF222222) : Colors.white,
+              color: AdaptiveTheme.of(context).mode.isDark ? Color(0xFF222222) : Colors.white,
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                 child: Column(
@@ -458,14 +459,14 @@ class MessageBubbleReceiver extends StatelessWidget {
                       text,
                       style: myTextStyle.copyWith(
                         fontSize: 15,
-                        color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white : Colors.black,
+                        color: AdaptiveTheme.of(context).mode.isDark ? Colors.white : Colors.black,
                       ),
                     ),
                     Text(
                       time,
                       style: myTextStyle.copyWith(
                         fontSize: 10,
-                        color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                        color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black54,
                       ),
                     ),
                   ],

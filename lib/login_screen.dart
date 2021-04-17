@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:memessenger/chat_list.dart';
 import 'package:memessenger/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -19,16 +20,31 @@ class _LoginScreenState extends State<LoginScreen> {
   String email;
   String password;
   bool isLoading = false;
+  bool emailIsValid = false;
+  bool passwordIsValid = false;
+  bool hidePassword = true;
+
   String validateEmail(String value) {
     Pattern pattern =
         r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
         r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
         r"{0,253}[a-zA-Z0-9])?)*$";
     RegExp regex = new RegExp(pattern);
-    if (!regex.hasMatch(value) || value == null)
+    if (!regex.hasMatch(value) || value == null) {
+      Future.delayed(Duration.zero).then((_){
+        setState((){
+          emailIsValid = false;
+        });
+      });
       return 'Please Enter a Valid Email Address!';
-    else
+    } else {
+      Future.delayed(Duration.zero).then((_){
+        setState((){
+          emailIsValid = true;
+        });
+      });
       return null;
+    }
   }
 
   @override
@@ -55,23 +71,21 @@ class _LoginScreenState extends State<LoginScreen> {
               onChanged: (value) {
                 email = value;
               },
-              cursorColor: Colors.blueAccent,
               cursorHeight: 18,
               cursorWidth: 1.5,
               validator: validateEmail,
               autovalidateMode: AutovalidateMode.onUserInteraction,
-              textAlign: TextAlign.center,
               keyboardType: TextInputType.emailAddress,
               decoration: myInputDecoration.copyWith(
                 hintText: "Enter Your Email Address",
                 hintStyle: myTextStyle.copyWith(
                   fontSize: 14,
-                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                  color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black54,
                 ),
                 labelText: "Email",
                 labelStyle: myTextStyle.copyWith(
                   fontSize: 14,
-                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                  color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black54,
                 ),
               ),
             ),
@@ -81,21 +95,51 @@ class _LoginScreenState extends State<LoginScreen> {
               onChanged: (value) {
                 password = value;
               },
-              cursorColor: Colors.blueAccent,
+              validator: (value) {
+                if (password.isEmpty){
+                  Future.delayed(Duration.zero).then((_){
+                    setState((){
+                      passwordIsValid = false;
+                    });
+                  });
+                  return 'Password Cannot be Empty!';
+                }
+                else {
+                  Future.delayed(Duration.zero).then((_){
+                    setState((){
+                      passwordIsValid = true;
+                    });
+                  });
+                  return null;
+                }
+              },
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               cursorHeight: 18,
               cursorWidth: 1.5,
-              textAlign: TextAlign.center,
-              obscureText: true,
+              obscureText: hidePassword,
               decoration: myInputDecoration.copyWith(
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    hidePassword == true ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                    color: hidePassword == false && AdaptiveTheme.of(context).mode.isLight ? Color(0xFF524C97)
+                        : hidePassword == false && AdaptiveTheme.of(context).mode.isDark ? Color(0xFF5EE3C3)
+                        : Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      hidePassword=!hidePassword;
+                    });
+                  },
+                ),
                 hintText: "Enter Your Password",
                 hintStyle: myTextStyle.copyWith(
                   fontSize: 14,
-                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                  color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black54,
                 ),
                 labelText: "Password",
                 labelStyle: myTextStyle.copyWith(
                   fontSize: 14,
-                  color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black54,
+                  color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black54,
                 ),
               ),
             ),
@@ -104,26 +148,28 @@ class _LoginScreenState extends State<LoginScreen> {
               tag: "login",
               child: MyButton(
                 title: isLoading==false ? "LOGIN" : "",
-                color: Colors.blue[500],
-                onPressed: () async {
+                color:
+                emailIsValid == false
+                || passwordIsValid == false
+                    ? Colors.grey
+                    : Colors.blue[500],
+                onPressed:
+                emailIsValid == false
+                || passwordIsValid == false
+                    ? null
+                    : () async {
                   try{
-                    if (email.isNotEmpty && password.isNotEmpty){
                       setState(() {
                         isLoading = true;
                       });
                       var user = await _auth.signInWithEmailAndPassword(email: email, password: password);
-                      user.user.emailVerified ?
-                      Navigator.pushNamedAndRemoveUntil(context, ChatList.route, (route) => false) : ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Email has not been verified yet!"),
+                      user.user.emailVerified
+                      ? Navigator.pushNamedAndRemoveUntil(context, ChatList.route, (route) => false)
+                      : ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Email has not been verified yet!"),
                         ),
                       );
-                    }
-                    else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Please fill out all the fields!"),
-                        ),
-                      );
-                    }
                   }
                   catch (e) {
                     print(e);
@@ -160,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     isLoading = false;
                   });
                 },
-                widget: isLoading==false ? SizedBox(width: 0,) : SizedBox(
+                widget: isLoading==false ? Container() : SizedBox(
                   height: 20,
                   width: 20,
                   child: CircularProgressIndicator(

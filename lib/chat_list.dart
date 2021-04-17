@@ -213,7 +213,7 @@ class ChatTile extends StatelessWidget {
           title: Text(
             title,
             style: myTextStyleBold.copyWith(
-              color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white : Colors.black,
+              color: AdaptiveTheme.of(context).mode.isDark ? Colors.white : Colors.black,
               fontSize: 15,
             ),
           ),
@@ -222,14 +222,14 @@ class ChatTile extends StatelessWidget {
               Text(
                 "You: ",
                 style: myTextStyle.copyWith(
-                    color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black45,
+                    color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black45,
                     fontSize: 14,
                 ),
               ),
               Text(
                 lastMessage.length > 30 ? lastMessage.substring(0,30) + "..." : lastMessage,
                 style: myTextStyle.copyWith(
-                    color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black45,
+                    color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black45,
                     fontSize: 14,
                 ),
               ),
@@ -238,14 +238,14 @@ class ChatTile extends StatelessWidget {
           Text(
             lastMessage.length > 35 ? lastMessage.substring(0,35) + "..." : lastMessage,
             style: myTextStyle.copyWith(
-              color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black45,
+              color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black45,
               fontSize: 14,
             ),
           ),
           trailing: Text(
             lastMessageTime,
             style: myTextStyle.copyWith(
-              color: Theme.of(context).primaryColor == Color(0xFF222222) ? Colors.white54 : Colors.black45,
+              color: AdaptiveTheme.of(context).mode.isDark ? Colors.white54 : Colors.black45,
               fontSize: 14,
             ),
           ),
