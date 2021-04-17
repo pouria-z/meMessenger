@@ -147,7 +147,7 @@ class _ChatScreenState extends State<ChatScreen> {
             suffixIcon: IconButton(
               icon: Icon(
                 Icons.send_rounded,
-                color: Color(0xFF524C97),
+                color: AdaptiveTheme.of(context).mode.isDark ? Color(0xFF2B5381) : Color(0xFF524C97),
               ),
               onPressed: () {
                 sendMessage();
@@ -387,7 +387,7 @@ class MessageBubble extends StatelessWidget {
                   topRight: Radius.circular(4)
                 ),
                 elevation: 5,
-                color: AdaptiveTheme.of(context).mode.isDark ? Colors.grey[500] : Color(0xFF524C97),
+                color: AdaptiveTheme.of(context).mode.isDark ? Color(0xFF2B5381) : Color(0xFF524C97),
                   child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                   child: Column(
@@ -396,7 +396,7 @@ class MessageBubble extends StatelessWidget {
                       Text(
                         text,
                         style: myTextStyle.copyWith(
-                          color: AdaptiveTheme.of(context).mode.isDark ? Colors.black : Colors.white,
+                          color: Colors.white,
                           fontSize: 15,
                         ),
                       ),
@@ -404,7 +404,7 @@ class MessageBubble extends StatelessWidget {
                         time,
                         style: myTextStyle.copyWith(
                           fontSize: 10,
-                          color: AdaptiveTheme.of(context).mode.isDark ? Colors.black54 : Colors.white54,
+                          color: Colors.white54,
                         ),
                       ),
                     ],

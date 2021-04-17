@@ -9,6 +9,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:memessenger/welcome_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:adaptive_theme/adaptive_theme.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:memessenger/my_icon.dart';
 
 final _auth = FirebaseAuth.instance;
 final _firestore = FirebaseFirestore.instance;
@@ -23,7 +25,7 @@ class ChatList extends StatefulWidget {
 
 class _ChatListState extends State<ChatList> {
 
-  String _chosenValue;
+  bool isDark = false;
 
   @override
   void initState() {
@@ -32,20 +34,20 @@ class _ChatListState extends State<ChatList> {
   }
 
   getThemeValue() async {
-    _chosenValue = await getThemeState();
+    isDark = await getThemeState();
   }
 
-  Future<String> saveThemeValue(String value) async {
+  Future<bool> saveThemeValue(bool value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString("themeValue", value);
-    print('Theme mode saved $value');
+    prefs.setBool("themeValue", value);
+    print('Is theme dark? $value');
   }
 
-  Future<String> getThemeState() async {
+  Future<bool> getThemeState() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String stringValue = prefs.getString("themeValue");
+    bool stringValue = prefs.getBool("themeValue");
     print(stringValue);
-    return stringValue;
+    return isDark;
   }
 
   @override
@@ -80,54 +82,80 @@ class _ChatListState extends State<ChatList> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: SafeArea(
-          child: ListTile(
-            title: Text(
-              "Theme",
-              style: myTextStyle.copyWith(
-                color: AdaptiveTheme.of(context).mode.isDark ? Colors.white
-                    : Colors.black,
-              ),
-            ),
-            trailing: DropdownButton<String>(
-              icon: Icon(Icons.arrow_drop_down_rounded),
-              value: _chosenValue,
-              onChanged: (String value) {
-                setState(() {
-                  _chosenValue = value;
-                  saveThemeValue(_chosenValue);
-                  _chosenValue=='Light' ? AdaptiveTheme.of(context).setLight()
-                      : AdaptiveTheme.of(context).setDark();
-                });
-              },
-              items: <String>[
-                'Light',
-                'Dark',
-              ]
-                  .map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-            ),
-          ),
-        ),
-      ),
+      // drawer: Drawer(
+      //   child: SafeArea(
+      //     child: ListTile(
+      //       title: Text(
+      //         "Theme",
+      //         style: myTextStyle.copyWith(
+      //           color: AdaptiveTheme.of(context).mode.isDark ? Colors.white
+      //               : Colors.black,
+      //         ),
+      //       ),
+      //       trailing: DropdownButton<String>(
+      //         icon: Icon(Icons.arrow_drop_down_rounded),
+      //         value: _chosenValue,
+      //         onChanged: (String value) {
+      //           setState(() {
+      //             _chosenValue = value;
+      //             saveThemeValue(_chosenValue);
+      //             _chosenValue=='Light' ? AdaptiveTheme.of(context).setLight()
+      //                 : AdaptiveTheme.of(context).setDark();
+      //           });
+      //         },
+      //         items: <String>[
+      //           'Light',
+      //           'Dark',
+      //         ]
+      //             .map<DropdownMenuItem<String>>((String value) {
+      //               return DropdownMenuItem<String>(
+      //                 value: value,
+      //                 child: Text(value),
+      //               );
+      //             }).toList(),
+      //       ),
+      //     ),
+      //   ),
+      // ),
       body: ChatStreamer(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _auth.signOut();
-          Navigator.pushReplacementNamed(context, WelcomeScreen.route);
-        },
-        child: Icon(
-          Icons.logout,
-          color: Colors.white,
-        ),
-        backgroundColor: Theme.of(context).primaryColor,
-        heroTag: "floating",
-      ),
+      floatingActionButton: SpeedDial(
+        animatedIcon: AnimatedIcons.menu_arrow,
+        curve: Curves.bounceIn,
+        heroTag: 'floating',
+        tooltip: 'Menu',
+        elevation: 5,
+        backgroundColor: Color(0xFF524C97),
+        foregroundColor: Theme.of(context).scaffoldBackgroundColor,
+        activeBackgroundColor: Colors.red,
+        overlayColor: AdaptiveTheme.of(context).mode.isDark ? Colors.black12 : Colors.white12,
+        children: [
+          SpeedDialChild(
+            child: Icon(Icons.logout),
+            backgroundColor: Color(0xFF524C97),
+              foregroundColor: Theme.of(context).scaffoldBackgroundColor,
+            onTap: () {
+              _auth.signOut();
+              Navigator.pushReplacementNamed(context, WelcomeScreen.route);
+            }
+          ),
+          SpeedDialChild(
+            child: AdaptiveTheme.of(context).mode.isDark
+                ? Icon(Icons.wb_sunny_outlined)
+                : Icon(MyIcons.moon),
+            backgroundColor: Color(0xFF524C97),
+            foregroundColor: Theme.of(context).scaffoldBackgroundColor,
+            onTap: () {
+              setState(() {
+                isDark=!isDark;
+                saveThemeValue(isDark);
+                AdaptiveTheme.of(context).mode.isLight
+                    ? AdaptiveTheme.of(context).setDark()
+                    : AdaptiveTheme.of(context).setLight();
+              });
+            }
+          ),
+        ],
+      )
     );
   }
 }
