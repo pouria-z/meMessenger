@@ -163,14 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       setState(() {
                         isLoading = true;
                       });
-                      var user = await _auth.signInWithEmailAndPassword(email: email, password: password)
-                          .timeout(Duration(seconds: 30)).whenComplete(() => ScaffoldMessenger.of(context)
-                          .showSnackBar(
-                        SnackBar(
-                          content: Text("Something went wrong. Try again later!"),
-                        ),
-                      ),
-                      );
+                      var user = await _auth.signInWithEmailAndPassword(email: email, password: password);
                       user.user.emailVerified
                       ? Navigator.pushNamedAndRemoveUntil(context, ChatList.route, (route) => false)
                       : ScaffoldMessenger.of(context).showSnackBar(
