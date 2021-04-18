@@ -222,6 +222,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     color: hidePassword == false && AdaptiveTheme.of(context).mode.isLight ? Color(0xFF524C97)
                         : hidePassword == false && AdaptiveTheme.of(context).mode.isDark ? Color(0xFF5EE3C3)
                         : Colors.grey,
+                    size: 20,
                   ),
                   onPressed: () {
                     setState(() {
@@ -276,6 +277,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     color: hidePassword == false && AdaptiveTheme.of(context).mode.isLight ? Color(0xFF524C97)
                         : hidePassword == false && AdaptiveTheme.of(context).mode.isDark ? Color(0xFF5EE3C3)
                         : Colors.grey,
+                    size: 20,
                   ),
                   onPressed: () {
                     setState(() {

@@ -82,41 +82,6 @@ class _ChatListState extends State<ChatList> {
           ),
         ],
       ),
-      // drawer: Drawer(
-      //   child: SafeArea(
-      //     child: ListTile(
-      //       title: Text(
-      //         "Theme",
-      //         style: myTextStyle.copyWith(
-      //           color: AdaptiveTheme.of(context).mode.isDark ? Colors.white
-      //               : Colors.black,
-      //         ),
-      //       ),
-      //       trailing: DropdownButton<String>(
-      //         icon: Icon(Icons.arrow_drop_down_rounded),
-      //         value: _chosenValue,
-      //         onChanged: (String value) {
-      //           setState(() {
-      //             _chosenValue = value;
-      //             saveThemeValue(_chosenValue);
-      //             _chosenValue=='Light' ? AdaptiveTheme.of(context).setLight()
-      //                 : AdaptiveTheme.of(context).setDark();
-      //           });
-      //         },
-      //         items: <String>[
-      //           'Light',
-      //           'Dark',
-      //         ]
-      //             .map<DropdownMenuItem<String>>((String value) {
-      //               return DropdownMenuItem<String>(
-      //                 value: value,
-      //                 child: Text(value),
-      //               );
-      //             }).toList(),
-      //       ),
-      //     ),
-      //   ),
-      // ),
       body: ChatStreamer(),
       floatingActionButton: SpeedDial(
         animatedIcon: AnimatedIcons.menu_arrow,
@@ -160,7 +125,11 @@ class _ChatListState extends State<ChatList> {
   }
 }
 
-class ChatStreamer extends StatelessWidget {
+class ChatStreamer extends StatefulWidget {
+  @override
+  _ChatStreamerState createState() => _ChatStreamerState();
+}
+class _ChatStreamerState extends State<ChatStreamer> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
@@ -180,7 +149,8 @@ class ChatStreamer extends StatelessWidget {
             child: Text(
               "No Chat Yet!",
               style: myTextStyle.copyWith(
-                  fontSize: 24,color: Colors.black38
+                  fontSize: 24,
+                  color: AdaptiveTheme.of(context).mode.isDark ? Colors.white38 : Colors.black38,
               ),
             ),
           );
@@ -281,7 +251,7 @@ class ChatTile extends StatelessWidget {
             Navigator.push(context, CupertinoPageRoute(
               builder: (context) => ChatScreen(chatRoomId),
             ));
-          }
+          },
         ),
       ],
     );

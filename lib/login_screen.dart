@@ -124,6 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: hidePassword == false && AdaptiveTheme.of(context).mode.isLight ? Color(0xFF524C97)
                         : hidePassword == false && AdaptiveTheme.of(context).mode.isDark ? Color(0xFF5EE3C3)
                         : Colors.grey,
+                    size: 20,
                   ),
                   onPressed: () {
                     setState(() {
@@ -162,7 +163,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       setState(() {
                         isLoading = true;
                       });
-                      var user = await _auth.signInWithEmailAndPassword(email: email, password: password);
+                      var user = await _auth.signInWithEmailAndPassword(email: email, password: password)
+                          .timeout(Duration(seconds: 30)).whenComplete(() => ScaffoldMessenger.of(context)
+                          .showSnackBar(
+                        SnackBar(
+                          content: Text("Something went wrong. Try again later!"),
+                        ),
+                      ),
+                      );
                       user.user.emailVerified
                       ? Navigator.pushNamedAndRemoveUntil(context, ChatList.route, (route) => false)
                       : ScaffoldMessenger.of(context).showSnackBar(

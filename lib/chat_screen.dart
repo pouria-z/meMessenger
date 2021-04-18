@@ -219,7 +219,7 @@ class ChatStream extends StatelessWidget {
         }
         return ListView(
           reverse: true,
-          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 30),
           children: messagesBubbles,
         );
       },
@@ -275,7 +275,7 @@ class MessageBubble extends StatelessWidget {
     return SafeArea(
       minimum: EdgeInsets.only(left: MediaQuery.of(context).size.width/4),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 2, vertical: 7),
+        padding: EdgeInsets.symmetric(vertical: 3),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [

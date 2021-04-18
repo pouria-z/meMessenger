@@ -22,7 +22,6 @@ dependencies:
   flutter_speed_dial: ^3.0.5
 
 
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
